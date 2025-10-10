@@ -133,24 +133,58 @@ class Program
     }
     static async Task ProcessEmfluenceApiAsync()
     {
+        try
+        {
+            LogMessage("Loading store configurations...");
+            var stores = StoreConfigurationManager.GetEnabledStores();
+            
+            if (stores.Count == 0)
+            {
+                LogMessage("ERROR: No enabled stores configured in App.config");
+                return;
+            }
+            
+            LogMessage($"Found {stores.Count} enabled store(s) to process");
+            
+            // Process each store
+            foreach (var store in stores)
+            {
+                await ProcessStoreAsync(store);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"ERROR in ProcessEmfluenceApiAsync: {ex.Message}");
+            throw;
+        }
+    }
+
+    static async Task ProcessStoreAsync(StoreConfiguration store)
+    {
         EmfluenceApiService apiService = null;
         try
         {
-            string accessToken = ConfigurationManager.AppSettings["EmfluenceAccessToken"];
-            string deliveryType = ConfigurationManager.AppSettings["EmfluenceDeliveryType"] ?? "manual";
-            string status = ConfigurationManager.AppSettings["EmfluenceStatus"] ?? "sent";
-            string dateSentStart = ConfigurationManager.AppSettings["EmfluenceDateSentStart"] ?? "2020-01-01";
-            int maxRecords = int.Parse(ConfigurationManager.AppSettings["EmfluenceMaxRecords"] ?? "10000");
-            if (string.IsNullOrEmpty(accessToken))
+            LogMessage($"=== PROCESSING STORE: {store.StoreName} (ID: {store.StoreId}) ===");
+            
+            if (string.IsNullOrEmpty(store.AccessToken))
             {
-                LogMessage("ERROR: EmfluenceAccessToken not configured in App.config");
+                LogMessage($"ERROR: Access token not configured for store {store.StoreName}");
                 return;
             }
-            LogMessage("Initializing Emfluence API service...");
-            apiService = new EmfluenceApiService(accessToken);
+            
+            LogMessage($"Initializing Emfluence API service for store: {store.StoreName}...");
+            apiService = new EmfluenceApiService(store);
+            
             LogMessage("=== FETCHING ALL DETAILED RECORDS ===");
-            var allDetailRecords = await apiService.GetAllEmailRecordsAsync(deliveryType: deliveryType, status: status, dateSentStart: dateSentStart, automatedResults: "detail", maxRecords: maxRecords);
-            LogMessage($"Total detailed records fetched: {allDetailRecords.Count}");
+            var allDetailRecords = await apiService.GetAllEmailRecordsAsync(
+                deliveryType: store.DeliveryType, 
+                status: store.Status, 
+                dateSentStart: store.DateSentStart, 
+                automatedResults: "detail", 
+                maxRecords: store.MaxRecords);
+            
+            LogMessage($"Total detailed records fetched for {store.StoreName}: {allDetailRecords.Count}");
+            
             var allDetailResponse = new EmfluenceAPI.RootResponse
             {
                 Data = new EmfluenceAPI.DataWrapper
@@ -162,17 +196,22 @@ class Program
                 Code = 200,
                 RequestID = Guid.NewGuid().ToString()
             };
+            
+            // Create store-specific file names
+            string storePrefix = $"{store.StoreId}_";
+            string allDetailJsonPath = Path.Combine(OutputDirectory, $"{storePrefix}all_records_detail.json");
+            string allDetailCsvPath = Path.Combine(OutputDirectory, $"{storePrefix}all_records_detail.csv");
+            
             string allDetailJson = JsonConvert.SerializeObject(allDetailResponse, Formatting.Indented);
-            string allDetailJsonPath = Path.Combine(OutputDirectory, "all_records_detail.json");
             File.WriteAllText(allDetailJsonPath, allDetailJson);
             LogMessage($"All detailed records saved to: {allDetailJsonPath}");
-            string allDetailCsvPath = Path.Combine(OutputDirectory, "all_records_detail.csv");
+            
             apiService.ConvertResponseToCsv(allDetailResponse, allDetailCsvPath);
 
             // Store in MongoDB if enabled
             if (EnableMongoDbStorage)
             {
-                LogMessage("=== STORING DATA IN MONGODB ===");
+                LogMessage($"=== STORING DATA IN MONGODB FOR STORE: {store.StoreName} ===");
                 MongoDbService mongoService = null;
                 try
                 {
@@ -181,9 +220,9 @@ class Program
                     // Create indexes for better performance
                     await mongoService.CreateIndexesAsync();
 
-                    // Store the records
-                    int storedCount = await mongoService.StoreEmfluenceEmailsAsync(allDetailRecords);
-                    LogMessage($"Successfully stored {storedCount} records in MongoDB");
+                    // Store the records with store information
+                    int storedCount = await mongoService.StoreEmfluenceEmailsAsync(allDetailRecords, store.StoreId, store.StoreName);
+                    LogMessage($"Successfully stored {storedCount} records in MongoDB for store: {store.StoreName}");
 
                     // Get total count in collection
                     long totalCount = await mongoService.GetEmfluenceEmailCountAsync();
@@ -191,16 +230,16 @@ class Program
                 }
                 catch (Exception ex)
                 {
-                    LogMessage($"Error storing data in MongoDB: {ex.Message}");
+                    LogMessage($"Error storing data in MongoDB for store {store.StoreName}: {ex.Message}");
                     LogMessage("Continuing with file operations...");
                 }
             }
 
-            LogMessage("Emfluence API processing completed successfully.");
+            LogMessage($"Emfluence API processing completed successfully for store: {store.StoreName}");
         }
         catch (HttpRequestException ex)
         {
-            LogMessage($"Emfluence API Error: {ex.Message}");
+            LogMessage($"Emfluence API Error for store {store.StoreName}: {ex.Message}");
             LogMessage("This might be due to:");
             LogMessage("  - Invalid access token");
             LogMessage("  - Network connectivity issues");
@@ -208,7 +247,7 @@ class Program
         }
         catch (Exception ex)
         {
-            LogMessage($"Error processing Emfluence API data: {ex.Message}");
+            LogMessage($"Error processing Emfluence API data for store {store.StoreName}: {ex.Message}");
         }
         finally
         {

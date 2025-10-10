@@ -14,12 +14,16 @@ namespace DataStudioDataMgr
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
         private readonly string _accessToken;
+        private readonly string _storeId;
+        private readonly string _storeName;
 
         public EmfluenceApiService(string accessToken)
         {
             _httpClient = new HttpClient();
             _baseUrl = "https://api.emailer.emfluence.com/v1/emails/search";
             _accessToken = accessToken;
+            _storeId = "default";
+            _storeName = "Default Store";
             
             // Set up the authorization header
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
@@ -31,11 +35,49 @@ namespace DataStudioDataMgr
             _httpClient = httpClient;
             _baseUrl = "https://api.emailer.emfluence.com/v1/emails/search";
             _accessToken = accessToken;
+            _storeId = "default";
+            _storeName = "Default Store";
             
             // Set up the authorization header
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
+
+        public EmfluenceApiService(StoreConfiguration storeConfig)
+        {
+            _httpClient = new HttpClient();
+            _baseUrl = "https://api.emailer.emfluence.com/v1/emails/search";
+            _accessToken = storeConfig.AccessToken;
+            _storeId = storeConfig.StoreId;
+            _storeName = storeConfig.StoreName;
+            
+            // Set up the authorization header
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
+            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        }
+
+        public EmfluenceApiService(StoreConfiguration storeConfig, HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+            _baseUrl = "https://api.emailer.emfluence.com/v1/emails/search";
+            _accessToken = storeConfig.AccessToken;
+            _storeId = storeConfig.StoreId;
+            _storeName = storeConfig.StoreName;
+            
+            // Set up the authorization header
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_accessToken}");
+            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+        }
+
+        /// <summary>
+        /// Gets the store ID for this service instance
+        /// </summary>
+        public string StoreId => _storeId;
+
+        /// <summary>
+        /// Gets the store name for this service instance
+        /// </summary>
+        public string StoreName => _storeName;
 
         /// <summary>
         /// Fetches email records from the Emfluence API
@@ -83,7 +125,7 @@ namespace DataStudioDataMgr
                 var queryString = string.Join("&", queryParams);
                 var fullUrl = $"{_baseUrl}?{queryString}";
 
-                Console.WriteLine($"Making API request to: {fullUrl}");
+                Console.WriteLine($"Making API request to: {fullUrl} (Store: {_storeName})");
 
                 // Make the API call
                 var response = await _httpClient.GetAsync(fullUrl);
@@ -166,13 +208,13 @@ namespace DataStudioDataMgr
             int recordsPerPage = 250;
             bool hasMorePages = true;
 
-            Console.WriteLine("Starting to fetch all email records with pagination...");
+            Console.WriteLine($"Starting to fetch all email records with pagination for store: {_storeName}...");
 
             while (hasMorePages)
             {
                 try
                 {
-                    Console.WriteLine($"Fetching page {currentPage}...");
+                    Console.WriteLine($"Fetching page {currentPage} for store: {_storeName}...");
                     
                     var response = await GetEmailRecordsAsync(
                         deliveryType, 
@@ -221,7 +263,7 @@ namespace DataStudioDataMgr
                 }
             }
 
-            Console.WriteLine($"Completed fetching records. Total records collected: {allRecords.Count}");
+            Console.WriteLine($"Completed fetching records for store: {_storeName}. Total records collected: {allRecords.Count}");
             return allRecords;
         }
 

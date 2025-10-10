@@ -29,8 +29,10 @@ namespace DataStudioDataMgr
         /// Stores Emfluence email records in MongoDB
         /// </summary>
         /// <param name="records">List of email records to store</param>
+        /// <param name="storeId">Store identifier</param>
+        /// <param name="storeName">Store name</param>
         /// <returns>Number of documents inserted</returns>
-        public async Task<int> StoreEmfluenceEmailsAsync(List<EmfluenceAPI.Record> records)
+        public async Task<int> StoreEmfluenceEmailsAsync(List<EmfluenceAPI.Record> records, string storeId = "default", string storeName = "Default Store")
         {
             try
             {
@@ -69,6 +71,9 @@ namespace DataStudioDataMgr
                         Views = record.Metrics?.Views ?? 0,
                         UniqueShares = record.Metrics?.UniqueShares ?? 0,
                         
+                        // Store information
+                        StoreId = storeId,
+                        StoreName = storeName,
                         
                         // Metadata
                         CreatedAt = DateTime.UtcNow,
@@ -81,14 +86,14 @@ namespace DataStudioDataMgr
                 if (documents.Count > 0)
                 {
                     await _emfluenceCollection.InsertManyAsync(documents);
-                    Console.WriteLine($"Successfully stored {documents.Count} Emfluence email records in MongoDB");
+                    Console.WriteLine($"Successfully stored {documents.Count} Emfluence email records in MongoDB for store: {storeName}");
                 }
 
                 return documents.Count;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error storing Emfluence emails in MongoDB: {ex.Message}");
+                Console.WriteLine($"Error storing Emfluence emails in MongoDB for store {storeName}: {ex.Message}");
                 throw;
             }
         }
@@ -134,6 +139,16 @@ namespace DataStudioDataMgr
                     .Ascending(x => x.UserID)
                     .Ascending(x => x.DateSent);
                 await _emfluenceCollection.Indexes.CreateOneAsync(new CreateIndexModel<EmfluenceEmailDocument>(compoundIndex));
+
+                // Create index on StoreId for store-specific queries
+                var storeIdIndex = Builders<EmfluenceEmailDocument>.IndexKeys.Ascending(x => x.StoreId);
+                await _emfluenceCollection.Indexes.CreateOneAsync(new CreateIndexModel<EmfluenceEmailDocument>(storeIdIndex));
+
+                // Create compound index on StoreId and DateSent for store-specific date queries
+                var storeDateIndex = Builders<EmfluenceEmailDocument>.IndexKeys
+                    .Ascending(x => x.StoreId)
+                    .Ascending(x => x.DateSent);
+                await _emfluenceCollection.Indexes.CreateOneAsync(new CreateIndexModel<EmfluenceEmailDocument>(storeDateIndex));
 
                 Console.WriteLine("MongoDB indexes created successfully");
             }
@@ -271,5 +286,12 @@ namespace DataStudioDataMgr
 
         [BsonElement("clientToken")]    
         public string ClientToken { get; set; }
+
+        // Store information
+        [BsonElement("storeId")]
+        public string StoreId { get; set; }
+
+        [BsonElement("storeName")]
+        public string StoreName { get; set; }
     }
 }

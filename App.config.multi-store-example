@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <connectionStrings>
+        <add name="DefaultConnection" 
+             connectionString="Server=(localdb)\mssqllocaldb;Database=DataStudioDataMgr;Trusted_Connection=true;MultipleActiveResultSets=true;" 
+             providerName="System.Data.SqlClient" />
+        <add name="MongoDbConnectionString" connectionString="mongodb+srv://admin:4ZAqu8qnwTnkFch@cluster0.rkrpr.mongodb.net/?retryWrites=true&amp;w=majority" />
+    </connectionStrings>
+    
+    <appSettings>
+        <!-- Service Execution Configuration -->
+        <!-- Set to true/false to enable/disable services -->
+        <add key="RunEmfluenceApi" value="true" />
+        <add key="RunCouponApi" value="false" />
+        <add key="RunTestEmailMethod" value="false" />
+        
+        <!-- Emfluence API Configuration -->
+        <!-- Original single store configuration (for backward compatibility) -->
+        <add key="EmfluenceAccessToken" value="459F7AAF-77D6-4AAB-8EC4-75D2E926790E" />
+        <add key="EmfluenceDeliveryType" value="manual" />
+        <add key="EmfluenceStatus" value="sent" />
+        <add key="EmfluenceDateSentStart" value="2024-01-01" />
+        <add key="EmfluenceMaxRecords" value="10000" />
+        
+        <!-- Additional Store Configurations -->
+        <!-- Store 1 -->
+        <add key="Store_1_AccessToken" value="459F7AAF-77D6-4AAB-8EC4-75D2E926790E" />
+        <add key="Store_1_Name" value="Store 1 Name" />
+        <add key="Store_1_DeliveryType" value="manual" />
+        <add key="Store_1_Status" value="sent" />
+        <add key="Store_1_DateSentStart" value="2024-01-01" />
+        <add key="Store_1_MaxRecords" value="10000" />
+        <add key="Store_1_Enabled" value="true" />
+        
+        <!-- Store 2 -->
+        <add key="Store_2_AccessToken" value="459F7AAF-77D6-4AAB-8EC4-75D2E926790E" />
+        <add key="Store_2_Name" value="Store 2 Name" />
+        <add key="Store_2_DeliveryType" value="manual" />
+        <add key="Store_2_Status" value="sent" />
+        <add key="Store_2_DateSentStart" value="2024-01-01" />
+        <add key="Store_2_MaxRecords" value="10000" />
+        <add key="Store_2_Enabled" value="true" />
+        
+        <!-- Store 3 -->
+        <add key="Store_3_AccessToken" value="STORE_3_ACCESS_TOKEN_HERE" />
+        <add key="Store_3_Name" value="Store 3 Name" />
+        <add key="Store_3_DeliveryType" value="manual" />
+        <add key="Store_3_Status" value="sent" />
+        <add key="Store_3_DateSentStart" value="2024-01-01" />
+        <add key="Store_3_MaxRecords" value="10000" />
+        <add key="Store_3_Enabled" value="true" />
+        
+        <!-- Store 4 -->
+        <add key="Store_4_AccessToken" value="STORE_4_ACCESS_TOKEN_HERE" />
+        <add key="Store_4_Name" value="Store 4 Name" />
+        <add key="Store_4_DeliveryType" value="manual" />
+        <add key="Store_4_Status" value="sent" />
+        <add key="Store_4_DateSentStart" value="2024-01-01" />
+        <add key="Store_4_MaxRecords" value="10000" />
+        <add key="Store_4_Enabled" value="true" />
+        
+        <!-- Store 5 -->
+        <add key="Store_5_AccessToken" value="STORE_5_ACCESS_TOKEN_HERE" />
+        <add key="Store_5_Name" value="Store 5 Name" />
+        <add key="Store_5_DeliveryType" value="manual" />
+        <add key="Store_5_Status" value="sent" />
+        <add key="Store_5_DateSentStart" value="2024-01-01" />
+        <add key="Store_5_MaxRecords" value="10000" />
+        <add key="Store_5_Enabled" value="true" />
+        
+        <!-- Store 6 -->
+        <add key="Store_6_AccessToken" value="STORE_6_ACCESS_TOKEN_HERE" />
+        <add key="Store_6_Name" value="Store 6 Name" />
+        <add key="Store_6_DeliveryType" value="manual" />
+        <add key="Store_6_Status" value="sent" />
+        <add key="Store_6_DateSentStart" value="2024-01-01" />
+        <add key="Store_6_MaxRecords" value="10000" />
+        <add key="Store_6_Enabled" value="true" />
+        
+        <!-- Store 7 -->
+        <add key="Store_7_AccessToken" value="STORE_7_ACCESS_TOKEN_HERE" />
+        <add key="Store_7_Name" value="Store 7 Name" />
+        <add key="Store_7_DeliveryType" value="manual" />
+        <add key="Store_7_Status" value="sent" />
+        <add key="Store_7_DateSentStart" value="2024-01-01" />
+        <add key="Store_7_MaxRecords" value="10000" />
+        <add key="Store_7_Enabled" value="true" />
+        
+        <!-- Store 8 -->
+        <add key="Store_8_AccessToken" value="STORE_8_ACCESS_TOKEN_HERE" />
+        <add key="Store_8_Name" value="Store 8 Name" />
+        <add key="Store_8_DeliveryType" value="manual" />
+        <add key="Store_8_Status" value="sent" />
+        <add key="Store_8_DateSentStart" value="2024-01-01" />
+        <add key="Store_8_MaxRecords" value="10000" />
+        <add key="Store_8_Enabled" value="true" />
+        
+        <!-- Store 9 -->
+        <add key="Store_9_AccessToken" value="STORE_9_ACCESS_TOKEN_HERE" />
+        <add key="Store_9_Name" value="Store 9 Name" />
+        <add key="Store_9_DeliveryType" value="manual" />
+        <add key="Store_9_Status" value="sent" />
+        <add key="Store_9_DateSentStart" value="2024-01-01" />
+        <add key="Store_9_MaxRecords" value="10000" />
+        <add key="Store_9_Enabled" value="true" />
+        
+        <!-- Store 10 -->
+        <add key="Store_10_AccessToken" value="STORE_10_ACCESS_TOKEN_HERE" />
+        <add key="Store_10_Name" value="Store 10 Name" />
+        <add key="Store_10_DeliveryType" value="manual" />
+        <add key="Store_10_Status" value="sent" />
+        <add key="Store_10_DateSentStart" value="2024-01-01" />
+        <add key="Store_10_MaxRecords" value="10000" />
+        <add key="Store_10_Enabled" value="true" />
+        
+        <!-- Store 11 -->
+        <add key="Store_11_AccessToken" value="STORE_11_ACCESS_TOKEN_HERE" />
+        <add key="Store_11_Name" value="Store 11 Name" />
+        <add key="Store_11_DeliveryType" value="manual" />
+        <add key="Store_11_Status" value="sent" />
+        <add key="Store_11_DateSentStart" value="2024-01-01" />
+        <add key="Store_11_MaxRecords" value="10000" />
+        <add key="Store_11_Enabled" value="true" />
+        
+        <!-- Store 12 -->
+        <add key="Store_12_AccessToken" value="STORE_12_ACCESS_TOKEN_HERE" />
+        <add key="Store_12_Name" value="Store 12 Name" />
+        <add key="Store_12_DeliveryType" value="manual" />
+        <add key="Store_12_Status" value="sent" />
+        <add key="Store_12_DateSentStart" value="2024-01-01" />
+        <add key="Store_12_MaxRecords" value="10000" />
+        <add key="Store_12_Enabled" value="true" />
+        
+        <!-- Store 13 -->
+        <add key="Store_13_AccessToken" value="STORE_13_ACCESS_TOKEN_HERE" />
+        <add key="Store_13_Name" value="Store 13 Name" />
+        <add key="Store_13_DeliveryType" value="manual" />
+        <add key="Store_13_Status" value="sent" />
+        <add key="Store_13_DateSentStart" value="2024-01-01" />
+        <add key="Store_13_MaxRecords" value="10000" />
+        <add key="Store_13_Enabled" value="true" />
+        
+        <!-- Coupon API Configuration -->
+        <!-- Leave empty to use CouponDaysBack, or specify exact dates -->
+        <add key="CouponStartDate" value="2025-09-25" />
+        <add key="CouponEndDate" value="2025-09-25" />
+        <add key="CouponDaysBack" value="30" />
+        <add key="CouponStatuses" value="string" />
+        
+        <!-- General Configuration -->
+        <add key="OutputDirectory" value="output" />
+        <add key="JsonFilePath" value="response.json" />
+        <add key="MaxRecordsToProcess" value="1000" />
+        <add key="UseLocalFile" value="false" />
+        
+        <!-- MongoDB Configuration -->
+        <add key="MongoDbConnectionString" value="mongodb://localhost:27017" />
+        <add key="MongoDbDatabaseName" value="integration_test" />
+        <add key="MongoDbEmfluenceCollection" value="emfluence_email" />
+        <add key="EnableMongoDbStorage" value="true" />
+        
+        <!-- Logging Configuration -->
+        <add key="EnableDetailedLogging" value="true" />
+        <add key="LogToFile" value="false" />
+        <add key="LogFilePath" value="DataStudioDataMgr.log" />
+    </appSettings>
+</configuration>
