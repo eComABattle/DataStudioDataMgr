@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <connectionStrings>
+        <add name="DefaultConnection" 
+             connectionString="Server=(localdb)\mssqllocaldb;Database=DataStudioDataMgr;Trusted_Connection=true;MultipleActiveResultSets=true;" 
+             providerName="System.Data.SqlClient" />
+    </connectionStrings>
+    
+    <appSettings>
+        <!-- Service Execution Configuration -->
+        <!-- Set to true/false to enable/disable services -->
+        <add key="RunEmfluenceApi" value="true" />
+        <add key="RunCouponApi" value="true" />
+        <add key="RunTestEmailMethod" value="false" />
+        
+        <!-- Emfluence API Configuration -->
+        <add key="EmfluenceAccessToken" value="YOUR_ACCESS_TOKEN_HERE" />
+        <add key="EmfluenceDeliveryType" value="manual" />
+        <add key="EmfluenceStatus" value="sent" />
+        <add key="EmfluenceDateSentStart" value="2020-01-01" />
+        <add key="EmfluenceMaxRecords" value="10000" />
+        
+        <!-- Coupon API Configuration -->
+        <!-- Leave empty to use CouponDaysBack, or specify exact dates -->
+        <add key="CouponStartDate" value="" />
+        <add key="CouponEndDate" value="" />
+        <add key="CouponDaysBack" value="30" />
+        <add key="CouponStatuses" value="string" />
+        
+        <!-- General Configuration -->
+        <add key="OutputDirectory" value="output" />
+        <add key="JsonFilePath" value="response.json" />
+        <add key="MaxRecordsToProcess" value="1000" />
+        <add key="UseLocalFile" value="false" />
+        
+        <!-- MongoDB Configuration -->
+        <add key="MongoDbConnectionString" value="mongodb://localhost:27017" />
+        <add key="MongoDbDatabaseName" value="integration" />
+        <add key="MongoDbEmfluenceCollection" value="emfluence_email" />
+        <add key="EnableMongoDbStorage" value="true" />
+        
+        <!-- Logging Configuration -->
+        <add key="EnableDetailedLogging" value="true" />
+        <add key="LogToFile" value="false" />
+        <add key="LogFilePath" value="DataStudioDataMgr.log" />
+    </appSettings>
+</configuration>
+
+<!-- 
+CONFIGURATION EXAMPLES:
+
+1. Run only Emfluence API (detailed records only):
+   <add key="RunEmfluenceApi" value="true" />
+   <add key="RunCouponApi" value="false" />
+
+2. Run only Coupon API:
+   <add key="RunEmfluenceApi" value="false" />
+   <add key="RunCouponApi" value="true" />
+
+       3. Run both APIs:
+          <add key="RunEmfluenceApi" value="true" />
+          <add key="RunCouponApi" value="true" />
+
+       4. Run only the test email method (90-day daily test):
+          <add key="RunEmfluenceApi" value="false" />
+          <add key="RunCouponApi" value="false" />
+          <add key="RunTestEmailMethod" value="true" />
+
+       5. Run test email method with other services:
+          <add key="RunEmfluenceApi" value="true" />
+          <add key="RunCouponApi" value="false" />
+          <add key="RunTestEmailMethod" value="true" />
+
+       6. Use specific date range for Coupon API:
+   <add key="CouponStartDate" value="2024-01-01" />
+   <add key="CouponEndDate" value="2024-01-31" />
+
+5. Use last N days for Coupon API (default):
+   <add key="CouponStartDate" value="" />
+   <add key="CouponEndDate" value="" />
+   <add key="CouponDaysBack" value="30" />
+
+6. Enable file logging:
+   <add key="LogToFile" value="true" />
+   <add key="LogFilePath" value="C:\Logs\DataStudioDataMgr.log" />
+
+7. Disable detailed logging for production:
+   <add key="EnableDetailedLogging" value="false" />
+
+       8. Use local JSON file instead of APIs:
+          Run with command line: DataStudioDataMgr.exe --local
+          Or set: <add key="UseLocalFile" value="true" />
+
+       9. MongoDB Configuration:
+          <add key="MongoDbConnectionString" value="mongodb://localhost:27017" />
+          <add key="MongoDbDatabaseName" value="integration" />
+          <add key="MongoDbEmfluenceCollection" value="emfluence_email" />
+          <add key="EnableMongoDbStorage" value="true" />
+
+       10. Disable MongoDB storage:
+           <add key="EnableMongoDbStorage" value="false" />
+
+       NOTES:
+       - Emfluence API now only fetches detailed records (no summary data)
+       - All detailed records are always fetched with pagination
+       - Output files: all_records_detail.json/csv only
+       - MongoDB storage is enabled by default and stores all email properties
+       - MongoDB collection includes date fields and indexes for performance
+       - Test Email Method: Runs 90-day daily test with dateSentStart/dateSentEnd parameters
+       - Test Email Method creates CSV file: test_daily_emails.csv
+-->

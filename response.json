@@ -1,0 +1,98 @@
+{
+  "Data": {
+    "Records": [
+      {
+        "TemplateID": 12345,
+        "ReplyToAddress": "noreply@example.com",
+        "UserID": 1001,
+        "DateModified": "2024-01-15T10:30:00Z",
+        "FromAddress": "marketing@example.com",
+        "DeliveryType": "Email",
+        "Subject": "Welcome to Our Newsletter",
+        "DateAdded": "2024-01-15T09:00:00Z",
+        "CampaignIDs": [100, 101],
+        "Metrics": {
+          "UniqueViews": 1250,
+          "Bounces": 45,
+          "Forwards": 23,
+          "Recipients": 5000,
+          "UniqueForwards": 18,
+          "ClickToViewRate": 0.15,
+          "SendingIssues": 2,
+          "WebViews": 1200,
+          "Complaints": 1,
+          "Shares": 12,
+          "UniqueClicks": 187,
+          "Unsubscribes": 8,
+          "UniqueWebViews": 1150,
+          "Views": 1300,
+          "UniqueShares": 10
+        },
+        "ParentEmailID": null,
+        "Status": "Sent",
+        "Schedule": {
+          "DateScheduled": "2024-01-15T10:00:00Z",
+          "Confirmed": 1
+        },
+        "AbSplitID": null,
+        "FromName": "Marketing Team",
+        "EmailID": 987654321,
+        "ReplyToName": "No Reply",
+        "Title": "Newsletter Welcome",
+        "DateSent": "2024-01-15T10:00:00Z"
+      },
+      {
+        "TemplateID": 12346,
+        "ReplyToAddress": "support@example.com",
+        "UserID": 1002,
+        "DateModified": "2024-01-16T14:20:00Z",
+        "FromAddress": "support@example.com",
+        "DeliveryType": "Email",
+        "Subject": "Your Account Update",
+        "DateAdded": "2024-01-16T13:00:00Z",
+        "CampaignIDs": [102],
+        "Metrics": {
+          "UniqueViews": 850,
+          "Bounces": 12,
+          "Forwards": 5,
+          "Recipients": 2000,
+          "UniqueForwards": 4,
+          "ClickToViewRate": 0.22,
+          "SendingIssues": 0,
+          "WebViews": 820,
+          "Complaints": 0,
+          "Shares": 3,
+          "UniqueClicks": 187,
+          "Unsubscribes": 2,
+          "UniqueWebViews": 800,
+          "Views": 900,
+          "UniqueShares": 2
+        },
+        "ParentEmailID": null,
+        "Status": "Sent",
+        "Schedule": {
+          "DateScheduled": "2024-01-16T14:00:00Z",
+          "Confirmed": 1
+        },
+        "AbSplitID": null,
+        "FromName": "Support Team",
+        "EmailID": 987654322,
+        "ReplyToName": "Support",
+        "Title": "Account Update Notification",
+        "DateSent": "2024-01-16T14:00:00Z"
+      }
+    ],
+    "Paging": {
+      "TotalPages": 1,
+      "Next": null,
+      "Rpp": 50,
+      "Prev": null,
+      "Page": 1,
+      "TotalRecords": 2
+    }
+  },
+  "Success": 1,
+  "Code": 200,
+  "RequestID": "req-12345-67890"
+}
+
