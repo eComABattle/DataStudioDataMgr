@@ -42,8 +42,8 @@ namespace DataStudioDataMgr
             {
                 var defaultStore = new StoreConfiguration
                 {
-                    StoreId = "default",
-                    StoreName = "Default Store",
+                    StoreId = "PDF",
+                    StoreName = "Payless Discount Foods",
                     AccessToken = originalToken,
                     DeliveryType = ConfigurationManager.AppSettings["EmfluenceDeliveryType"] ?? "manual",
                     Status = ConfigurationManager.AppSettings["EmfluenceStatus"] ?? "sent",

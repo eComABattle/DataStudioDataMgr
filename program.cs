@@ -28,8 +28,12 @@ class Program
                 bool runEmfluenceApi = bool.Parse(ConfigurationManager.AppSettings["RunEmfluenceApi"] ?? "true");
                 bool runCouponApi = bool.Parse(ConfigurationManager.AppSettings["RunCouponApi"] ?? "true");
                 bool runTestEmailMethod = bool.Parse(ConfigurationManager.AppSettings["RunTestEmailMethod"] ?? "false");
+                bool runCampaignData = bool.Parse(ConfigurationManager.AppSettings["RunCampaignData"] ?? "false");
+                bool runMediaStudioData = bool.Parse(ConfigurationManager.AppSettings["RunMediaStudioData"] ?? "false");
+                bool runDigitalStudioData = bool.Parse(ConfigurationManager.AppSettings["RunDigitalStudioData"] ?? "false");
+                bool runEntryMetricsData = bool.Parse(ConfigurationManager.AppSettings["RunEntryMetricsData"] ?? "false");
 
-                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod)
+                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData)
                 {
                     LogMessage("No services configured to run. Check App.config settings.");
                     return;
@@ -95,6 +99,30 @@ class Program
                     {
                         apiService?.Dispose();
                     }
+                }
+
+                if (runCampaignData)
+                {
+                    LogMessage("=== RUNNING CAMPAIGN DATA SERVICE ===");
+                    await ProcessCampaignDataAsync();
+                }
+
+                if (runMediaStudioData)
+                {
+                    LogMessage("=== RUNNING MEDIASTUDIO DATA SERVICE ===");
+                    await ProcessMediaStudioDataAsync();
+                }
+
+                if (runDigitalStudioData)
+                {
+                    LogMessage("=== RUNNING DIGITALSTUDIO DATA SERVICE ===");
+                    await ProcessDigitalStudioDataAsync();
+                }
+
+                if (runEntryMetricsData)
+                {
+                    LogMessage("=== RUNNING ENTRY METRICS DATA SERVICE ===");
+                    await ProcessEntryMetricsDataAsync();
                 }
 
             }
@@ -321,6 +349,315 @@ class Program
             couponService?.Dispose();
         }
     }
+
+    static async Task ProcessCampaignDataAsync()
+    {
+        SqlServerService sqlService = null;
+        try
+        {
+            LogMessage("Initializing SQL Server service...");
+            sqlService = new SqlServerService();
+
+            // Test connection first
+            bool connectionOk = await sqlService.TestConnectionAsync();
+            if (!connectionOk)
+            {
+                LogMessage("ERROR: Could not connect to AdStudioUnfi database");
+                return;
+            }
+
+            LogMessage("=== FETCHING CAMPAIGN DATA ===");
+            var campaigns = await sqlService.GetCampaignsAsync();
+            LogMessage($"Total campaigns retrieved: {campaigns.Count}");
+
+            if (campaigns.Count > 0)
+            {
+                // Save to JSON
+                string campaignJsonPath = Path.Combine(OutputDirectory, "campaign_data.json");
+                await sqlService.SaveCampaignsToJsonAsync(campaigns, campaignJsonPath);
+                LogMessage($"Campaign data saved to: {campaignJsonPath}");
+
+                // Save to CSV
+                string campaignCsvPath = Path.Combine(OutputDirectory, "campaign_data.csv");
+                await sqlService.SaveCampaignsToCsvAsync(campaigns, campaignCsvPath);
+                LogMessage($"Campaign data saved to: {campaignCsvPath}");
+
+                // Store in MongoDB if enabled
+                if (EnableMongoDbStorage)
+                {
+                    LogMessage("=== STORING CAMPAIGN DATA IN MONGODB ===");
+                    MongoDbService mongoService = null;
+                    try
+                    {
+                        mongoService = new MongoDbService();
+
+                        // Create indexes for better performance
+                        await mongoService.CreateIndexesAsync();
+
+                        // Store the campaigns
+                        int storedCount = await mongoService.StoreCampaignsAsync(campaigns);
+                        LogMessage($"Successfully stored {storedCount} campaign records in MongoDB");
+
+                        // Get total count in campaign collection
+                        long totalCampaignCount = await mongoService.GetCampaignCountAsync();
+                        LogMessage($"Total campaign records in MongoDB collection: {totalCampaignCount}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogMessage($"Error storing campaign data in MongoDB: {ex.Message}");
+                        LogMessage("Continuing with file operations...");
+                    }
+                }
+            }
+            else
+            {
+                LogMessage("No campaign data found to save");
+            }
+
+            LogMessage("Campaign data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing campaign data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid connection string");
+            LogMessage("  - Database server not accessible");
+            LogMessage("  - Table or column name changes");
+            LogMessage("  - Permission issues");
+        }
+    }
+
+    static async Task ProcessMediaStudioDataAsync()
+    {
+        MediaStudioService mediaStudioService = null;
+        try
+        {
+            LogMessage("Initializing MediaStudio service...");
+            mediaStudioService = new MediaStudioService();
+
+            // Test connection first
+            bool connectionOk = await mediaStudioService.TestConnectionAsync();
+            if (!connectionOk)
+            {
+                LogMessage("ERROR: Could not connect to MediaStudio database");
+                return;
+            }
+
+            LogMessage("=== FETCHING UNFI POST CAMPAIGN STORE DATA ===");
+            var records = await mediaStudioService.GetUnfiPostCampaignStoreAsync();
+            LogMessage($"Total UNFI Post Campaign Store records retrieved: {records.Count}");
+
+            if (records.Count > 0)
+            {
+                // Save to JSON
+                string recordsJsonPath = Path.Combine(OutputDirectory, "unfi_post_campaign_store.json");
+                await mediaStudioService.SaveUnfiPostCampaignStoreToJsonAsync(records, recordsJsonPath);
+                LogMessage($"UNFI Post Campaign Store data saved to: {recordsJsonPath}");
+
+                // Save to CSV
+                string recordsCsvPath = Path.Combine(OutputDirectory, "unfi_post_campaign_store.csv");
+                await mediaStudioService.SaveUnfiPostCampaignStoreToCsvAsync(records, recordsCsvPath);
+                LogMessage($"UNFI Post Campaign Store data saved to: {recordsCsvPath}");
+
+                // Store in MongoDB if enabled
+                if (EnableMongoDbStorage)
+                {
+                    LogMessage("=== STORING UNFI POST CAMPAIGN STORE DATA IN MONGODB ===");
+                    MongoDbService mongoService = null;
+                    try
+                    {
+                        mongoService = new MongoDbService();
+
+                        // Create indexes for better performance
+                        await mongoService.CreateIndexesAsync();
+
+                        // Store the records
+                        int storedCount = await mongoService.StoreUnfiPostCampaignStoreAsync(records);
+                        LogMessage($"Successfully stored {storedCount} UNFI Post Campaign Store records in MongoDB");
+
+                        // Get total count in collection
+                        long totalCount = await mongoService.GetUnfiPostCampaignStoreCountAsync();
+                        LogMessage($"Total UNFI Post Campaign Store records in MongoDB collection: {totalCount}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogMessage($"Error storing UNFI Post Campaign Store data in MongoDB: {ex.Message}");
+                        LogMessage("Continuing with file operations...");
+                    }
+                }
+            }
+            else
+            {
+                LogMessage("No UNFI Post Campaign Store data found to save");
+            }
+
+            LogMessage("MediaStudio data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing MediaStudio data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid connection string");
+            LogMessage("  - Database server not accessible");
+            LogMessage("  - Table or column name changes");
+            LogMessage("  - Permission issues");
+        }
+    }
+
+    static async Task ProcessDigitalStudioDataAsync()
+    {
+        DigitalStudioService digitalStudioService = null;
+        try
+        {
+            LogMessage("Initializing DigitalStudio service...");
+            digitalStudioService = new DigitalStudioService();
+
+            // Test connection first
+            bool connectionOk = await digitalStudioService.TestConnectionAsync();
+            if (!connectionOk)
+            {
+                LogMessage("ERROR: Could not connect to DigitalStudio database");
+                return;
+            }
+
+            LogMessage("=== FETCHING CAMPAIGN STORE METRICS DATA ===");
+            var records = await digitalStudioService.GetCampaignStoreMetricsAsync();
+            LogMessage($"Total Campaign Store Metrics records retrieved: {records.Count}");
+
+            if (records.Count > 0)
+            {
+                // Save to JSON
+                string recordsJsonPath = Path.Combine(OutputDirectory, "campaign_store_metrics.json");
+                await digitalStudioService.SaveCampaignStoreMetricsToJsonAsync(records, recordsJsonPath);
+                LogMessage($"Campaign Store Metrics data saved to: {recordsJsonPath}");
+
+                // Save to CSV
+                string recordsCsvPath = Path.Combine(OutputDirectory, "campaign_store_metrics.csv");
+                await digitalStudioService.SaveCampaignStoreMetricsToCsvAsync(records, recordsCsvPath);
+                LogMessage($"Campaign Store Metrics data saved to: {recordsCsvPath}");
+
+                // Store in MongoDB if enabled
+                if (EnableMongoDbStorage)
+                {
+                    LogMessage("=== STORING CAMPAIGN STORE METRICS DATA IN MONGODB ===");
+                    MongoDbService mongoService = null;
+                    try
+                    {
+                        mongoService = new MongoDbService();
+
+                        // Create indexes for better performance
+                        await mongoService.CreateIndexesAsync();
+
+                        // Store the records
+                        int storedCount = await mongoService.StoreCampaignStoreMetricsAsync(records);
+                        LogMessage($"Successfully stored {storedCount} Campaign Store Metrics records in MongoDB");
+
+                        // Get total count in collection
+                        long totalCount = await mongoService.GetCampaignStoreMetricsCountAsync();
+                        LogMessage($"Total Campaign Store Metrics records in MongoDB collection: {totalCount}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogMessage($"Error storing Campaign Store Metrics data in MongoDB: {ex.Message}");
+                        LogMessage("Continuing with file operations...");
+                    }
+                }
+            }
+            else
+            {
+                LogMessage("No Campaign Store Metrics data found to save");
+            }
+
+            LogMessage("DigitalStudio data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing DigitalStudio data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid connection string");
+            LogMessage("  - Database server not accessible");
+            LogMessage("  - Table or column name changes");
+            LogMessage("  - Permission issues");
+        }
+    }
+
+    static async Task ProcessEntryMetricsDataAsync()
+    {
+        DigitalStudioService digitalStudioService = null;
+        try
+        {
+            LogMessage("Initializing DigitalStudio service for Entry Metrics...");
+            digitalStudioService = new DigitalStudioService();
+
+            // Test connection first
+            bool connectionOk = await digitalStudioService.TestConnectionAsync();
+            if (!connectionOk)
+            {
+                LogMessage("ERROR: Could not connect to DigitalStudio database");
+                return;
+            }
+
+            LogMessage("=== FETCHING ENTRY METRICS DATA ===");
+            var records = await digitalStudioService.GetEntryMetricsAsync();
+            LogMessage($"Total Entry Metrics records retrieved: {records.Count}");
+
+            if (records.Count > 0)
+            {
+                // Save to JSON
+                string recordsJsonPath = Path.Combine(OutputDirectory, "entry_metrics.json");
+                await digitalStudioService.SaveEntryMetricsToJsonAsync(records, recordsJsonPath);
+                LogMessage($"Entry Metrics data saved to: {recordsJsonPath}");
+
+                // Save to CSV
+                string recordsCsvPath = Path.Combine(OutputDirectory, "entry_metrics.csv");
+                await digitalStudioService.SaveEntryMetricsToCsvAsync(records, recordsCsvPath);
+                LogMessage($"Entry Metrics data saved to: {recordsCsvPath}");
+
+                // Store in MongoDB if enabled
+                if (EnableMongoDbStorage)
+                {
+                    LogMessage("=== STORING ENTRY METRICS DATA IN MONGODB ===");
+                    MongoDbService mongoService = null;
+                    try
+                    {
+                        mongoService = new MongoDbService();
+
+                        // Create indexes for better performance
+                        await mongoService.CreateIndexesAsync();
+
+                        // Store the records
+                        int storedCount = await mongoService.StoreEntryMetricsAsync(records);
+                        LogMessage($"Successfully stored {storedCount} Entry Metrics records in MongoDB");
+
+                        // Get total count in collection
+                        long totalCount = await mongoService.GetEntryMetricsCountAsync();
+                        LogMessage($"Total Entry Metrics records in MongoDB collection: {totalCount}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogMessage($"Error storing Entry Metrics data in MongoDB: {ex.Message}");
+                        LogMessage("Continuing with file operations...");
+                    }
+                }
+            }
+            else
+            {
+                LogMessage("No Entry Metrics data found to save");
+            }
+
+            LogMessage("Entry Metrics data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing Entry Metrics data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid connection string");
+            LogMessage("  - Database server not accessible");
+            LogMessage("  - Table or column name changes");
+            LogMessage("  - Permission issues");
+        }
+    }
+
     static Task ProcessLocalJsonFileAsync()
     {
         try

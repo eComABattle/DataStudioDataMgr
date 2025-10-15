@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <connectionStrings>
+        <add name="DefaultConnection" 
+             connectionString="Server=(localdb)\mssqllocaldb;Database=DataStudioDataMgr;Trusted_Connection=true;MultipleActiveResultSets=true;" 
+             providerName="System.Data.SqlClient" />
+		<add name="MongoDbConnectionString" connectionString="mongodb+srv://admin:4ZAqu8qnwTnkFch@cluster0.rkrpr.mongodb.net/?retryWrites=true&amp;w=majority" />
+        <add name="AdStudioUnfi" 
+             connectionString="Server=YOUR_SERVER_NAME;Database=YOUR_DATABASE_NAME;Integrated Security=true;TrustServerCertificate=true;" 
+             providerName="System.Data.SqlClient" />
+    </connectionStrings>
+    
+    <appSettings>
+        <!-- Service Execution Configuration -->
+        <!-- Set to true/false to enable/disable services -->
+        <add key="RunEmfluenceApi" value="true" />
+        <add key="RunCouponApi" value="false" />
+        <add key="RunTestEmailMethod" value="false" />
+        <add key="RunCampaignData" value="true" />
+        
+        <!-- Emfluence API Configuration -->
+        <!-- Original single store configuration (for backward compatibility) -->
+        <add key="EmfluenceAccessToken" value="YOUR_ACCESS_TOKEN_HERE" />
+        <add key="EmfluenceDeliveryType" value="manual" />
+        <add key="EmfluenceStatus" value="sent" />
+        <add key="EmfluenceDateSentStart" value="2024-01-01" />
+        <add key="EmfluenceMaxRecords" value="10000" />
+        
+        <!-- Additional Store Configurations -->
+        <!-- Store 1 -->
+        <add key="Store_1_AccessToken" value="STORE_1_ACCESS_TOKEN_HERE" />
+        <add key="Store_1_Name" value="Store 1 Name" />
+        <add key="Store_1_DeliveryType" value="manual" />
+        <add key="Store_1_Status" value="sent" />
+        <add key="Store_1_DateSentStart" value="2024-01-01" />
+        <add key="Store_1_MaxRecords" value="10000" />
+        <add key="Store_1_Enabled" value="true" />
+        
+        <!-- Store 2 -->
+        <add key="Store_2_AccessToken" value="STORE_2_ACCESS_TOKEN_HERE" />
+        <add key="Store_2_Name" value="Store 2 Name" />
+        <add key="Store_2_DeliveryType" value="manual" />
+        <add key="Store_2_Status" value="sent" />
+        <add key="Store_2_DateSentStart" value="2024-01-01" />
+        <add key="Store_2_MaxRecords" value="10000" />
+        <add key="Store_2_Enabled" value="true" />
+        
+        <!-- Store 3 -->
+        <add key="Store_3_AccessToken" value="STORE_3_ACCESS_TOKEN_HERE" />
+        <add key="Store_3_Name" value="Store 3 Name" />
+        <add key="Store_3_DeliveryType" value="manual" />
+        <add key="Store_3_Status" value="sent" />
+        <add key="Store_3_DateSentStart" value="2024-01-01" />
+        <add key="Store_3_MaxRecords" value="10000" />
+        <add key="Store_3_Enabled" value="true" />
+        
+        <!-- Add more stores as needed (Store_4 through Store_13) -->
+        <!-- Each store needs: AccessToken, Name, DeliveryType, Status, DateSentStart, MaxRecords, Enabled -->
+        
+        <!-- Coupon API Configuration -->
+        <!-- Leave empty to use CouponDaysBack, or specify exact dates -->
+        <add key="CouponStartDate" value="" />
+        <add key="CouponEndDate" value="" />
+        <add key="CouponDaysBack" value="30" />
+        <add key="CouponStatuses" value="string" />
+        
+        <!-- General Configuration -->
+        <add key="OutputDirectory" value="output" />
+        <add key="JsonFilePath" value="response.json" />
+        <add key="MaxRecordsToProcess" value="1000" />
+        <add key="UseLocalFile" value="false" />
+        
+        <!-- MongoDB Configuration -->
+        <add key="MongoDbConnectionString" value="mongodb://localhost:27017" />
+        <add key="MongoDbDatabaseName" value="integration_test" />
+        <add key="MongoDbEmfluenceCollection" value="emfluence_email" />
+        <add key="EnableMongoDbStorage" value="true" />
+        
+        <!-- Logging Configuration -->
+        <add key="EnableDetailedLogging" value="true" />
+        <add key="LogToFile" value="false" />
+        <add key="LogFilePath" value="DataStudioDataMgr.log" />
+    </appSettings>
+</configuration>
