@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Services.Coupon
 {
     public class CouponApi
     {

@@ -1,5 +1,14 @@
 using Newtonsoft.Json;
 using DataStudioDataMgr;
+using DataStudioDataMgr.Services.Emfluence;
+using DataStudioDataMgr.Services.Coupon;
+using DataStudioDataMgr.Services.SqlServer;
+using DataStudioDataMgr.Services.MediaStudio;
+using DataStudioDataMgr.Services.DigitalStudio;
+using DataStudioDataMgr.Services.MongoDb;
+using DataStudioDataMgr.Services.ShopToCook;
+using DataStudioDataMgr.Models;
+using DataStudioDataMgr.Configuration;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -32,8 +41,10 @@ class Program
                 bool runMediaStudioData = bool.Parse(ConfigurationManager.AppSettings["RunMediaStudioData"] ?? "false");
                 bool runDigitalStudioData = bool.Parse(ConfigurationManager.AppSettings["RunDigitalStudioData"] ?? "false");
                 bool runEntryMetricsData = bool.Parse(ConfigurationManager.AppSettings["RunEntryMetricsData"] ?? "false");
+                bool runShopToCookData = bool.Parse(ConfigurationManager.AppSettings["RunShopToCookData"] ?? "false");
+                bool testMongoDbConnection = bool.Parse(ConfigurationManager.AppSettings["TestMongoDbConnection"] ?? "false");
 
-                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData)
+                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData && !runShopToCookData && !testMongoDbConnection)
                 {
                     LogMessage("No services configured to run. Check App.config settings.");
                     return;
@@ -59,6 +70,10 @@ class Program
                     try
                     {
                         string accessToken = ConfigurationManager.AppSettings["EmfluenceAccessToken"];
+                        
+                        // Expand environment variables in access token
+                        accessToken = Environment.ExpandEnvironmentVariables(accessToken ?? "");
+                        
                         string deliveryType = ConfigurationManager.AppSettings["EmfluenceDeliveryType"] ?? "manual";
                         string status = ConfigurationManager.AppSettings["EmfluenceStatus"] ?? "sent";
                         string startDate = ConfigurationManager.AppSettings["TestStartDate"];
@@ -123,6 +138,19 @@ class Program
                 {
                     LogMessage("=== RUNNING ENTRY METRICS DATA SERVICE ===");
                     await ProcessEntryMetricsDataAsync();
+                }
+
+                if (runShopToCookData)
+                {
+                    LogMessage("=== RUNNING SHOPTOCOOK DATA SERVICE ===");
+                    await ProcessShopToCookDataAsync();
+                }
+
+                // Test MongoDB connection if enabled
+                if (testMongoDbConnection)
+                {
+                    LogMessage("=== TESTING MONGODB CONNECTION ===");
+                    await TestMongoDbConnectionAsync();
                 }
 
             }
@@ -395,7 +423,7 @@ class Program
                         await mongoService.CreateIndexesAsync();
 
                         // Store the campaigns
-                        int storedCount = await mongoService.StoreCampaignsAsync(campaigns);
+                        int storedCount = await mongoService.StoreCampaignsAsync(campaigns, "campaign_data.csv");
                         LogMessage($"Successfully stored {storedCount} campaign records in MongoDB");
 
                         // Get total count in campaign collection
@@ -696,5 +724,71 @@ class Program
             LogMessage($"Error processing local JSON file: {ex.Message}");
         }
         return Task.CompletedTask;
+    }
+
+    static async Task ProcessShopToCookDataAsync()
+    {
+        ShopToCookService shopToCookService = null;
+        try
+        {
+            LogMessage("Initializing ShopToCook service...");
+            shopToCookService = new ShopToCookService();
+
+            LogMessage("=== PROCESSING SHOPTOCOOK DATA ===");
+            await shopToCookService.ProcessShopToCookDataAsync();
+
+            LogMessage("ShopToCook data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing ShopToCook data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid SFTP credentials");
+            LogMessage("  - Network connectivity issues");
+            LogMessage("  - MongoDB connection problems");
+            LogMessage("  - CSV file format issues");
+        }
+    }
+
+    static async Task TestMongoDbConnectionAsync()
+    {
+        try
+        {
+            LogMessage("Testing MongoDB connection...");
+            var mongoService = new ShopToCookMongoService();
+            
+            bool connectionSuccessful = await mongoService.TestConnectionAsync();
+            
+            // If the first test fails, try the alternative method
+            if (!connectionSuccessful)
+            {
+                LogMessage("Primary connection test failed, trying alternative method...");
+                connectionSuccessful = await mongoService.TestConnectionSimpleAsync();
+            }
+            
+            if (connectionSuccessful)
+            {
+                LogMessage("MongoDB connection test successful!");
+            }
+            else
+            {
+                LogMessage("MongoDB connection test failed!");
+                LogMessage("This might be due to:");
+                LogMessage("  - MongoDB server not running");
+                LogMessage("  - Incorrect connection string");
+                LogMessage("  - Network connectivity issues");
+                LogMessage("  - Invalid credentials");
+                LogMessage("  - MongoDB driver compatibility issues");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error testing MongoDB connection: {ex.Message}");
+            LogMessage($"Error type: {ex.GetType().Name}");
+            if (ex.InnerException != null)
+            {
+                LogMessage($"Inner exception: {ex.InnerException.Message}");
+            }
+        }
     }
 }

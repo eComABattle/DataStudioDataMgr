@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Configuration;
+using DataStudioDataMgr.Services.Emfluence;
+using DataStudioDataMgr.Models;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Services.MongoDb
 {
     public class MongoDbService
     {
@@ -21,8 +23,16 @@ namespace DataStudioDataMgr
         {
             //string connectionString = ConfigurationManager.AppSettings["MongoDbConnectionString"] ?? "mongodb://localhost:27017";
             string connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MongoDbConnectionString"].ConnectionString;
+            
+            // Expand environment variables in connection string
+            connectionString = Environment.ExpandEnvironmentVariables(connectionString);
+            
             string databaseName = ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration_test";
             string collectionName = ConfigurationManager.AppSettings["MongoDbEmfluenceCollection"] ?? "emfluence_email";
+            
+            // Expand environment variables in database and collection names
+            databaseName = Environment.ExpandEnvironmentVariables(databaseName);
+            collectionName = Environment.ExpandEnvironmentVariables(collectionName);
 
             var client = new MongoClient(connectionString);
             _database = client.GetDatabase(databaseName);
@@ -111,7 +121,7 @@ namespace DataStudioDataMgr
         /// </summary>
         /// <param name="campaigns">List of campaigns to store</param>
         /// <returns>Number of documents inserted</returns>
-        public async Task<int> StoreCampaignsAsync(List<Campaign> campaigns)
+        public async Task<int> StoreCampaignsAsync(List<Campaign> campaigns, string csvFilePath)
         {
             try
             {
@@ -128,6 +138,7 @@ namespace DataStudioDataMgr
                         StartDate = campaign.StartDate,
                         EndDate = campaign.EndDate,
                         CreatedAt = DateTime.UtcNow,
+                        FileName = csvFilePath,
                         Source = "SqlServer"
                     };
                     
@@ -263,7 +274,7 @@ namespace DataStudioDataMgr
                         EntryId = record.EntryId,
                         EntryType = record.EntryType,
                         MetricType = record.MetricType,
-                        Timestamp = record.Timestamp,
+                        //Timestamp = record.Timestamp,
                         MetaData = record.MetaData,
                         CreatedAt = DateTime.UtcNow,
                         Source = "DigitalStudio"
@@ -499,14 +510,14 @@ namespace DataStudioDataMgr
                 await _entryMetricsCollection.Indexes.CreateOneAsync(new CreateIndexModel<EntryMetricsDocument>(entryMetricTypeIndex));
 
                 // Create index on Timestamp for date-based queries
-                var timestampIndex = Builders<EntryMetricsDocument>.IndexKeys.Ascending(x => x.Timestamp);
-                await _entryMetricsCollection.Indexes.CreateOneAsync(new CreateIndexModel<EntryMetricsDocument>(timestampIndex));
+                //var timestampIndex = Builders<EntryMetricsDocument>.IndexKeys.Ascending(x => x.Timestamp);
+                //await _entryMetricsCollection.Indexes.CreateOneAsync(new CreateIndexModel<EntryMetricsDocument>(timestampIndex));
 
                 // Create compound index on AccountId, EntryId, and Timestamp
                 var accountEntryTimestampIndex = Builders<EntryMetricsDocument>.IndexKeys
                     .Ascending(x => x.AccountId)
-                    .Ascending(x => x.EntryId)
-                    .Ascending(x => x.Timestamp);
+                    .Ascending(x => x.EntryId);
+                    //.Ascending(x => x.Timestamp);
                 await _entryMetricsCollection.Indexes.CreateOneAsync(new CreateIndexModel<EntryMetricsDocument>(accountEntryTimestampIndex));
 
                 Console.WriteLine("MongoDB indexes created successfully");
@@ -686,6 +697,9 @@ namespace DataStudioDataMgr
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; }
 
+        [BsonElement("fileName")]
+        public string FileName { get; set; }
+
         [BsonElement("source")]
         public string Source { get; set; }
     }
@@ -811,8 +825,8 @@ namespace DataStudioDataMgr
         [BsonElement("metricType")]
         public string MetricType { get; set; }
 
-        [BsonElement("timestamp")]
-        public string Timestamp { get; set; }
+        //[BsonElement("timestamp")]
+        //public string Timestamp { get; set; }
 
         [BsonElement("metaData")]
         public string MetaData { get; set; }

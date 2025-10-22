@@ -1,6 +1,6 @@
 using System;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Models
 {
     /// <summary>
     /// Represents UNFI Post Campaign Store data from the MediaStudio SQL Server database

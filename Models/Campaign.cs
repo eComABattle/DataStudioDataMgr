@@ -1,6 +1,6 @@
 using System;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Models
 {
     /// <summary>
     /// Represents an Ad Campaign from the SQL Server database

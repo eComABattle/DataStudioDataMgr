@@ -236,3 +236,4 @@ The query retrieves:
 - Metadata from entries
 
 The Entry Metrics SQL Server integration provides a complete solution for retrieving and exporting Entry Metrics data alongside the existing services.
+

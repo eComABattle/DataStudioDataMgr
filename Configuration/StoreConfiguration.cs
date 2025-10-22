@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Configuration
 {
     /// <summary>
     /// Represents configuration for a single store
@@ -36,6 +36,10 @@ namespace DataStudioDataMgr
             
             // Load the original single store configuration for backward compatibility
             var originalToken = ConfigurationManager.AppSettings["EmfluenceAccessToken"];
+            
+            // Expand environment variables in access token
+            originalToken = Environment.ExpandEnvironmentVariables(originalToken ?? "");
+            
             Console.WriteLine($"DEBUG: Original token found: {!string.IsNullOrEmpty(originalToken)}");
             
             if (!string.IsNullOrEmpty(originalToken))
@@ -61,6 +65,10 @@ namespace DataStudioDataMgr
             for (int i = 1; i <= 20; i++) // Support up to 20 additional stores
             {
                 var accessToken = ConfigurationManager.AppSettings[$"Store_{i}_AccessToken"];
+                
+                // Expand environment variables in access token
+                accessToken = Environment.ExpandEnvironmentVariables(accessToken ?? "");
+                
                 Console.WriteLine($"DEBUG: Checking Store_{i}_AccessToken: {!string.IsNullOrEmpty(accessToken)}");
                 
                 if (!string.IsNullOrEmpty(accessToken))

@@ -7,7 +7,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Services.Coupon
 {
     public class CouponApiService
     {

@@ -6,8 +6,9 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using DataStudioDataMgr.Configuration;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Services.Emfluence
 {
     public class EmfluenceApiService
     {

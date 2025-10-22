@@ -1940,7 +1940,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 114,
-          "UniqueViews": 354,
+          "UniqueViews": 355,
           "Bounces": 48,
           "Forwards": 0,
           "Recipients": 5437,
@@ -1953,7 +1953,7 @@
           "UniqueClicks": 93,
           "Unsubscribes": 5,
           "UniqueWebViews": 5,
-          "Views": 457,
+          "Views": 458,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -1981,7 +1981,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 27,
-          "UniqueViews": 329,
+          "UniqueViews": 330,
           "Bounces": 49,
           "Forwards": 0,
           "Recipients": 5433,
@@ -1994,7 +1994,7 @@
           "UniqueClicks": 25,
           "Unsubscribes": 3,
           "UniqueWebViews": 7,
-          "Views": 401,
+          "Views": 403,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -2022,7 +2022,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 108,
-          "UniqueViews": 346,
+          "UniqueViews": 347,
           "Bounces": 46,
           "Forwards": 0,
           "Recipients": 5439,
@@ -2035,7 +2035,7 @@
           "UniqueClicks": 92,
           "Unsubscribes": 1,
           "UniqueWebViews": 4,
-          "Views": 460,
+          "Views": 462,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -2063,7 +2063,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 43,
-          "UniqueViews": 288,
+          "UniqueViews": 289,
           "Bounces": 46,
           "Forwards": 0,
           "Recipients": 5444,
@@ -2076,7 +2076,7 @@
           "UniqueClicks": 33,
           "Unsubscribes": 3,
           "UniqueWebViews": 6,
-          "Views": 365,
+          "Views": 366,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -2145,7 +2145,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 118,
-          "UniqueViews": 332,
+          "UniqueViews": 333,
           "Bounces": 39,
           "Forwards": 0,
           "Recipients": 5449,
@@ -2158,7 +2158,7 @@
           "UniqueClicks": 95,
           "Unsubscribes": 1,
           "UniqueWebViews": 4,
-          "Views": 461,
+          "Views": 462,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -2186,7 +2186,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 147,
-          "UniqueViews": 350,
+          "UniqueViews": 351,
           "Bounces": 35,
           "Forwards": 0,
           "Recipients": 5460,
@@ -2199,7 +2199,7 @@
           "UniqueClicks": 106,
           "Unsubscribes": 2,
           "UniqueWebViews": 7,
-          "Views": 452,
+          "Views": 454,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -2931,7 +2931,7 @@
           "UniqueForwards": 0,
           "ClickToViewRate": 0.2,
           "SendingIssues": 0,
-          "WebViews": 5,
+          "WebViews": 6,
           "Complaints": 0,
           "Shares": 0,
           "UniqueClicks": 80,
@@ -4318,7 +4318,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 8,
-          "UniqueViews": 294,
+          "UniqueViews": 295,
           "Bounces": 32,
           "Forwards": 0,
           "Recipients": 5847,
@@ -4331,7 +4331,7 @@
           "UniqueClicks": 7,
           "Unsubscribes": 2,
           "UniqueWebViews": 2,
-          "Views": 351,
+          "Views": 352,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4400,7 +4400,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 44,
-          "UniqueViews": 321,
+          "UniqueViews": 322,
           "Bounces": 30,
           "Forwards": 0,
           "Recipients": 5851,
@@ -4413,7 +4413,7 @@
           "UniqueClicks": 37,
           "Unsubscribes": 0,
           "UniqueWebViews": 6,
-          "Views": 379,
+          "Views": 380,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4481,7 +4481,7 @@
         "DateAdded": "2025-08-22T18:10:06",
         "CampaignIDs": [],
         "Metrics": {
-          "Clicks": 130,
+          "Clicks": 131,
           "UniqueViews": 315,
           "Bounces": 33,
           "Forwards": 0,
@@ -4495,7 +4495,7 @@
           "UniqueClicks": 88,
           "Unsubscribes": 2,
           "UniqueWebViews": 2,
-          "Views": 435,
+          "Views": 436,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4523,7 +4523,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 20,
-          "UniqueViews": 303,
+          "UniqueViews": 304,
           "Bounces": 29,
           "Forwards": 0,
           "Recipients": 5870,
@@ -4536,7 +4536,7 @@
           "UniqueClicks": 14,
           "Unsubscribes": 3,
           "UniqueWebViews": 5,
-          "Views": 359,
+          "Views": 360,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4564,7 +4564,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 49,
-          "UniqueViews": 318,
+          "UniqueViews": 319,
           "Bounces": 39,
           "Forwards": 0,
           "Recipients": 5888,
@@ -4577,7 +4577,7 @@
           "UniqueClicks": 41,
           "Unsubscribes": 2,
           "UniqueWebViews": 3,
-          "Views": 401,
+          "Views": 403,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4605,7 +4605,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 20,
-          "UniqueViews": 304,
+          "UniqueViews": 305,
           "Bounces": 39,
           "Forwards": 0,
           "Recipients": 5891,
@@ -4618,7 +4618,7 @@
           "UniqueClicks": 14,
           "Unsubscribes": 1,
           "UniqueWebViews": 4,
-          "Views": 363,
+          "Views": 365,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4646,7 +4646,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 94,
-          "UniqueViews": 318,
+          "UniqueViews": 320,
           "Bounces": 41,
           "Forwards": 0,
           "Recipients": 5894,
@@ -4659,7 +4659,7 @@
           "UniqueClicks": 72,
           "Unsubscribes": 2,
           "UniqueWebViews": 0,
-          "Views": 397,
+          "Views": 400,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4687,7 +4687,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 24,
-          "UniqueViews": 301,
+          "UniqueViews": 302,
           "Bounces": 46,
           "Forwards": 0,
           "Recipients": 5892,
@@ -4700,7 +4700,7 @@
           "UniqueClicks": 20,
           "Unsubscribes": 2,
           "UniqueWebViews": 4,
-          "Views": 361,
+          "Views": 362,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4769,7 +4769,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 20,
-          "UniqueViews": 299,
+          "UniqueViews": 300,
           "Bounces": 33,
           "Forwards": 0,
           "Recipients": 5883,
@@ -4782,7 +4782,7 @@
           "UniqueClicks": 13,
           "Unsubscribes": 2,
           "UniqueWebViews": 5,
-          "Views": 342,
+          "Views": 343,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4810,7 +4810,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 17,
-          "UniqueViews": 277,
+          "UniqueViews": 278,
           "Bounces": 48,
           "Forwards": 0,
           "Recipients": 5880,
@@ -4823,7 +4823,7 @@
           "UniqueClicks": 14,
           "Unsubscribes": 3,
           "UniqueWebViews": 0,
-          "Views": 325,
+          "Views": 326,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4851,7 +4851,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 75,
-          "UniqueViews": 317,
+          "UniqueViews": 318,
           "Bounces": 44,
           "Forwards": 0,
           "Recipients": 5874,
@@ -4864,7 +4864,7 @@
           "UniqueClicks": 65,
           "Unsubscribes": 7,
           "UniqueWebViews": 5,
-          "Views": 397,
+          "Views": 398,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4891,8 +4891,8 @@
         "DateAdded": "2025-09-29T02:36:37",
         "CampaignIDs": [],
         "Metrics": {
-          "Clicks": 104,
-          "UniqueViews": 321,
+          "Clicks": 105,
+          "UniqueViews": 324,
           "Bounces": 43,
           "Forwards": 0,
           "Recipients": 5888,
@@ -4902,10 +4902,10 @@
           "WebViews": 3,
           "Complaints": 0,
           "Shares": 0,
-          "UniqueClicks": 78,
+          "UniqueClicks": 79,
           "Unsubscribes": 3,
           "UniqueWebViews": 2,
-          "Views": 430,
+          "Views": 442,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4933,7 +4933,7 @@
         "CampaignIDs": [],
         "Metrics": {
           "Clicks": 84,
-          "UniqueViews": 327,
+          "UniqueViews": 332,
           "Bounces": 39,
           "Forwards": 0,
           "Recipients": 5887,
@@ -4946,7 +4946,7 @@
           "UniqueClicks": 59,
           "Unsubscribes": 3,
           "UniqueWebViews": 3,
-          "Views": 425,
+          "Views": 436,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -4973,21 +4973,21 @@
         "DateAdded": "2025-10-10T17:07:42",
         "CampaignIDs": [],
         "Metrics": {
-          "Clicks": 53,
-          "UniqueViews": 178,
-          "Bounces": 22,
+          "Clicks": 91,
+          "UniqueViews": 289,
+          "Bounces": 43,
           "Forwards": 0,
           "Recipients": 5885,
           "UniqueForwards": 0,
           "ClickToViewRate": 0.2,
           "SendingIssues": 0,
-          "WebViews": 2,
+          "WebViews": 5,
           "Complaints": 0,
           "Shares": 0,
-          "UniqueClicks": 43,
+          "UniqueClicks": 68,
           "Unsubscribes": 0,
-          "UniqueWebViews": 2,
-          "Views": 200,
+          "UniqueWebViews": 4,
+          "Views": 383,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -5002,11 +5002,93 @@
         "ReplyToName": "Metropolis Big John",
         "Title": "10.13.25 weekly ad",
         "DateSent": "2025-10-13T11:00:08"
+      },
+      {
+        "TemplateID": 18798,
+        "ReplyToAddress": "mike@bigjohngrocery.com",
+        "UserID": 51143,
+        "DateModified": "2025-10-13T15:43:19",
+        "FromAddress": "mike@bigjohngrocery.com",
+        "DeliveryType": "Manual",
+        "Subject": "🏈 Touchdown Snacks: Totino’s, Pillsbury & Chex Mix Inside",
+        "DateAdded": "2025-10-13T15:35:59",
+        "CampaignIDs": [],
+        "Metrics": {
+          "Clicks": 25,
+          "UniqueViews": 298,
+          "Bounces": 40,
+          "Forwards": 0,
+          "Recipients": 5884,
+          "UniqueForwards": 0,
+          "ClickToViewRate": 0.1,
+          "SendingIssues": 0,
+          "WebViews": 7,
+          "Complaints": 0,
+          "Shares": 0,
+          "UniqueClicks": 23,
+          "Unsubscribes": 1,
+          "UniqueWebViews": 3,
+          "Views": 356,
+          "UniqueShares": 0
+        },
+        "ParentEmailID": "",
+        "Status": "Sent",
+        "Schedule": {
+          "DateScheduled": "",
+          "Confirmed": 0
+        },
+        "AbSplitID": "",
+        "FromName": "Metropolis Big John",
+        "EmailID": 51644141,
+        "ReplyToName": "Metropolis Big John",
+        "Title": "10.16.25 RMN - General Mills Game Day",
+        "DateSent": "2025-10-16T12:00:06"
+      },
+      {
+        "TemplateID": 18798,
+        "ReplyToAddress": "mike@bigjohngrocery.com",
+        "UserID": 51143,
+        "DateModified": "2025-10-15T18:50:48",
+        "FromAddress": "mike@bigjohngrocery.com",
+        "DeliveryType": "Manual",
+        "Subject": "Make Breakfast Better with Honey Bunches of Oats 🍯",
+        "DateAdded": "2025-10-15T18:43:24",
+        "CampaignIDs": [],
+        "Metrics": {
+          "Clicks": 17,
+          "UniqueViews": 260,
+          "Bounces": 22,
+          "Forwards": 0,
+          "Recipients": 5886,
+          "UniqueForwards": 0,
+          "ClickToViewRate": 0.0,
+          "SendingIssues": 0,
+          "WebViews": 12,
+          "Complaints": 0,
+          "Shares": 0,
+          "UniqueClicks": 11,
+          "Unsubscribes": 3,
+          "UniqueWebViews": 8,
+          "Views": 306,
+          "UniqueShares": 0
+        },
+        "ParentEmailID": "",
+        "Status": "Sent",
+        "Schedule": {
+          "DateScheduled": "",
+          "Confirmed": 0
+        },
+        "AbSplitID": "",
+        "FromName": "Metropolis Big John",
+        "EmailID": 51669899,
+        "ReplyToName": "Metropolis Big John",
+        "Title": "10.21.25 RMN - Post HBO",
+        "DateSent": "2025-10-21T12:00:05"
       }
     ],
     "Paging": null
   },
   "Success": 1,
   "Code": 200,
-  "RequestID": "c429882e-fa24-4a8c-9746-4bae0c63c08a"
+  "RequestID": "f0254bdf-8163-46c3-81b0-801684b79ad5"
 }

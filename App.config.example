@@ -4,70 +4,164 @@
         <add name="DefaultConnection" 
              connectionString="Server=(localdb)\mssqllocaldb;Database=DataStudioDataMgr;Trusted_Connection=true;MultipleActiveResultSets=true;" 
              providerName="System.Data.SqlClient" />
+		<add name="MongoDbConnectionString" connectionString="mongodb+srv://%MONGODB_USERNAME%:%MONGODB_PASSWORD%@%MONGODB_HOST%/%MONGODB_DATABASE%?retryWrites=true&amp;w=majority" />
+        <add name="AdStudioUnfi"
+             connectionString="Data Source=vm-testdb;Integrated Security=true;Initial Catalog=UNFI"
+             providerName="System.Data.SqlClient" />
+		<add name="MediaStudio" connectionString="Data Source=vm-testdb;Integrated Security=true;Initial Catalog=MediaStudio"/>
+		<add name="DigitalStudio" connectionString="Data Source=vm-testdb;Integrated Security=true;Initial Catalog=DigitalStudio"/>
     </connectionStrings>
     
     <appSettings>
         <!-- Service Execution Configuration -->
-        <!-- Set to true/false to enable/disable services -->
-        <add key="RunEmfluenceApi" value="true" />
-        <add key="RunCouponApi" value="true" />
+        <add key="RunEmfluenceApi" value="false" />
+        <add key="RunCouponApi" value="false" />
         <add key="RunTestEmailMethod" value="false" />
+        <add key="RunCampaignData" value="false" />
+        <add key="RunMediaStudioData" value="false" />
+        <add key="RunDigitalStudioData" value="false" />
+        <add key="RunEntryMetricsData" value="false" />
+        <add key="RunShopToCookData" value="false" />
+        <add key="TestShopToCookCsv" value="false" />
+        <add key="TestMongoDbConnection" value="false" />
         
-        <!-- Emfluence API Configuration -->
-        <!-- Original single store configuration (for backward compatibility) -->
-        <add key="EmfluenceAccessToken" value="YOUR_ACCESS_TOKEN_HERE" />
-        <add key="EmfluenceDeliveryType" value="manual" />
-        <add key="EmfluenceStatus" value="sent" />
-        <add key="EmfluenceDateSentStart" value="2020-01-01" />
-        <add key="EmfluenceMaxRecords" value="10000" />
-        
-        <!-- Additional Store Configurations -->
-        <!-- Store 1 -->
-        <add key="Store_1_AccessToken" value="STORE_1_ACCESS_TOKEN_HERE" />
-        <add key="Store_1_Name" value="Store 1 Name" />
-        <add key="Store_1_DeliveryType" value="manual" />
-        <add key="Store_1_Status" value="sent" />
-        <add key="Store_1_DateSentStart" value="2020-01-01" />
-        <add key="Store_1_MaxRecords" value="10000" />
-        <add key="Store_1_Enabled" value="true" />
-        
-        <!-- Store 2 -->
-        <add key="Store_2_AccessToken" value="STORE_2_ACCESS_TOKEN_HERE" />
-        <add key="Store_2_Name" value="Store 2 Name" />
-        <add key="Store_2_DeliveryType" value="manual" />
-        <add key="Store_2_Status" value="sent" />
-        <add key="Store_2_DateSentStart" value="2020-01-01" />
-        <add key="Store_2_MaxRecords" value="10000" />
-        <add key="Store_2_Enabled" value="true" />
-        
-        <!-- Store 3 -->
-        <add key="Store_3_AccessToken" value="STORE_3_ACCESS_TOKEN_HERE" />
-        <add key="Store_3_Name" value="Store 3 Name" />
-        <add key="Store_3_DeliveryType" value="manual" />
-        <add key="Store_3_Status" value="sent" />
-        <add key="Store_3_DateSentStart" value="2020-01-01" />
-        <add key="Store_3_MaxRecords" value="10000" />
-        <add key="Store_3_Enabled" value="true" />
-        
-        <!-- Add more stores as needed (Store_4 through Store_13) -->
-        <!-- Each store needs: AccessToken, Name, DeliveryType, Status, DateSentStart, MaxRecords, Enabled -->
-        
+        <!-- ShopToCook SFTP Configuration -->
+        <add key="ShopToCookSftpHost" value="sftp.ecomsystems.com" />
+        <add key="ShopToCookSftpPort" value="22" />
+        <add key="ShopToCookSftpUsername" value="ShopToCookAdmin" />
+                <add key="ShopToCookSftpPassword" value="%SHOPTOCOOK_SFTP_PASSWORD%" />
+        <add key="ShopToCookLocalPath" value="downloads" />
+        <add key="ShopToCookCleanupFiles" value="false" />
+
+                <!-- Emfluence API Configuration -->
+                <add key="EmfluenceAccessToken" value="%EMFLUENCE_ACCESS_TOKEN%" />
+                <add key="EmfluenceDeliveryType" value="manual" />
+                <add key="EmfluenceStatus" value="sent" />
+                <add key="EmfluenceDateSentStart" value="2024-01-01" />
+                <add key="EmfluenceMaxRecords" value="10000" />
+                
+                <!-- Additional Store Configurations -->
+                <!-- Store 1 -->
+                <add key="Store_1_AccessToken" value="%STORE_1_ACCESS_TOKEN%" />
+                <add key="Store_1_Name" value="Big John" />
+                <add key="Store_1_DeliveryType" value="manual" />
+                <add key="Store_1_Status" value="sent" />
+                <add key="Store_1_DateSentStart" value="2024-01-01" />
+                <add key="Store_1_MaxRecords" value="10000" />
+                <add key="Store_1_Enabled" value="true" />
+                
+                <!-- Store 2 -->
+                <add key="Store_2_AccessToken" value="%STORE_2_ACCESS_TOKEN%" />
+                <add key="Store_2_Name" value="Bratchers" />
+                <add key="Store_2_DeliveryType" value="manual" />
+                <add key="Store_2_Status" value="sent" />
+                <add key="Store_2_DateSentStart" value="2024-01-01" />
+                <add key="Store_2_MaxRecords" value="10000" />
+                <add key="Store_2_Enabled" value="true" />
+                
+                <!-- Store 3 -->
+                <add key="Store_3_AccessToken" value="%STORE_3_ACCESS_TOKEN%" />
+                <add key="Store_3_Name" value="Schultes" />
+                <add key="Store_3_DeliveryType" value="manual" />
+                <add key="Store_3_Status" value="sent" />
+                <add key="Store_3_DateSentStart" value="2024-01-01" />
+                <add key="Store_3_MaxRecords" value="10000" />
+                <add key="Store_3_Enabled" value="true" />
+                
+                <!-- Store 4 -->
+                <add key="Store_4_AccessToken" value="%STORE_4_ACCESS_TOKEN%" />
+                <add key="Store_4_Name" value="Sun Fresh" />
+                <add key="Store_4_DeliveryType" value="manual" />
+                <add key="Store_4_Status" value="sent" />
+                <add key="Store_4_DateSentStart" value="2024-01-01" />
+                <add key="Store_4_MaxRecords" value="10000" />
+                <add key="Store_4_Enabled" value="true" />
+                
+                <!-- Store 5 -->
+                <add key="Store_5_AccessToken" value="%STORE_5_ACCESS_TOKEN%" />
+                <add key="Store_5_Name" value="Taylorsville" />
+                <add key="Store_5_DeliveryType" value="manual" />
+                <add key="Store_5_Status" value="sent" />
+                <add key="Store_5_DateSentStart" value="2024-01-01" />
+                <add key="Store_5_MaxRecords" value="10000" />
+                <add key="Store_5_Enabled" value="true" />
+                
+                <!-- Store 6 -->
+                <add key="Store_6_AccessToken" value="%STORE_6_ACCESS_TOKEN%" />
+                <add key="Store_6_Name" value="Country Mart KC" />
+                <add key="Store_6_DeliveryType" value="manual" />
+                <add key="Store_6_Status" value="sent" />
+                <add key="Store_6_DateSentStart" value="2024-01-01" />
+                <add key="Store_6_MaxRecords" value="10000" />
+                <add key="Store_6_Enabled" value="true" />
+                
+                <!-- Store 7 -->
+                <add key="Store_7_AccessToken" value="%STORE_7_ACCESS_TOKEN%" />
+                <add key="Store_7_Name" value="Greer's" />
+                <add key="Store_7_DeliveryType" value="manual" />
+                <add key="Store_7_Status" value="sent" />
+                <add key="Store_7_DateSentStart" value="2024-01-01" />
+                <add key="Store_7_MaxRecords" value="10000" />
+                <add key="Store_7_Enabled" value="true" />
+                
+                <!-- Store 8 -->
+                <add key="Store_8_AccessToken" value="%STORE_8_ACCESS_TOKEN%" />
+                <add key="Store_8_Name" value="Store 8 Name" />
+                <add key="Store_8_DeliveryType" value="manual" />
+                <add key="Store_8_Status" value="sent" />
+                <add key="Store_8_DateSentStart" value="2024-01-01" />
+                <add key="Store_8_MaxRecords" value="10000" />
+                <add key="Store_8_Enabled" value="false" />
+                
+                <!-- Store 9 -->
+                <add key="Store_9_AccessToken" value="%STORE_9_ACCESS_TOKEN%" />
+                <add key="Store_9_Name" value="Store 9 Name" />
+                <add key="Store_9_DeliveryType" value="manual" />
+                <add key="Store_9_Status" value="sent" />
+                <add key="Store_9_DateSentStart" value="2024-01-01" />
+                <add key="Store_9_MaxRecords" value="10000" />
+                <add key="Store_9_Enabled" value="false" />
+
         <!-- Coupon API Configuration -->
-        <!-- Leave empty to use CouponDaysBack, or specify exact dates -->
-        <add key="CouponStartDate" value="" />
-        <add key="CouponEndDate" value="" />
-        <add key="CouponDaysBack" value="30" />
-        <add key="CouponStatuses" value="string" />
-        
-        <!-- General Configuration -->
+        <add key="CouponApiUrl" value="https://api.coupon.com/v1" />
+        <add key="CouponApiKey" value="${COUPON_API_KEY}" />
+        <add key="CouponClientId" value="${COUPON_CLIENT_ID}" />
+        <add key="CouponSecretKey" value="${COUPON_SECRET_KEY}" />
+
+        <!-- Campaign Data Configuration -->
+        <add key="CampaignDataApiUrl" value="https://api.campaign.com/v1" />
+        <add key="CampaignDataApiKey" value="${CAMPAIGN_DATA_API_KEY}" />
+        <add key="CampaignDataClientId" value="${CAMPAIGN_DATA_CLIENT_ID}" />
+        <add key="CampaignDataSecretKey" value="${CAMPAIGN_DATA_SECRET_KEY}" />
+
+        <!-- Media Studio Configuration -->
+        <add key="MediaStudioApiUrl" value="https://api.mediastudio.com/v1" />
+        <add key="MediaStudioApiKey" value="${MEDIA_STUDIO_API_KEY}" />
+        <add key="MediaStudioClientId" value="${MEDIA_STUDIO_CLIENT_ID}" />
+        <add key="MediaStudioSecretKey" value="${MEDIA_STUDIO_SECRET_KEY}" />
+
+        <!-- Digital Studio Configuration -->
+        <add key="DigitalStudioApiUrl" value="https://api.digitalstudio.com/v1" />
+        <add key="DigitalStudioApiKey" value="${DIGITAL_STUDIO_API_KEY}" />
+        <add key="DigitalStudioClientId" value="${DIGITAL_STUDIO_CLIENT_ID}" />
+        <add key="DigitalStudioSecretKey" value="${DIGITAL_STUDIO_SECRET_KEY}" />
+
+        <!-- Entry Metrics Configuration -->
+        <add key="EntryMetricsApiUrl" value="https://api.entrymetrics.com/v1" />
+        <add key="EntryMetricsApiKey" value="${ENTRY_METRICS_API_KEY}" />
+        <add key="EntryMetricsClientId" value="${ENTRY_METRICS_CLIENT_ID}" />
+        <add key="EntryMetricsSecretKey" value="${ENTRY_METRICS_SECRET_KEY}" />
+
+        <!-- File Processing Configuration -->
+        <add key="InputDirectory" value="input" />
         <add key="OutputDirectory" value="output" />
         <add key="JsonFilePath" value="response.json" />
         <add key="MaxRecordsToProcess" value="1000" />
         <add key="UseLocalFile" value="false" />
         
         <!-- MongoDB Configuration -->
-        <add key="MongoDbConnectionString" value="mongodb://localhost:27017" />
-        <add key="MongoDbDatabaseName" value="integration" />
+                <add key="MongoDbDatabaseName" value="%MONGODB_DATABASE_NAME%" />
+                <add key="MongoDbTestDatabaseName" value="%MONGODB_TEST_DATABASE_NAME%" />
         <add key="MongoDbEmfluenceCollection" value="emfluence_email" />
         <add key="EnableMongoDbStorage" value="true" />
         
@@ -75,69 +169,20 @@
         <add key="EnableDetailedLogging" value="true" />
         <add key="LogToFile" value="false" />
         <add key="LogFilePath" value="DataStudioDataMgr.log" />
+        <add key="LogLevel" value="Information" />
+        
+        <!-- Email Configuration -->
+        <add key="SmtpServer" value="${SMTP_SERVER}" />
+        <add key="SmtpPort" value="${SMTP_PORT}" />
+        <add key="SmtpUsername" value="${SMTP_USERNAME}" />
+        <add key="SmtpPassword" value="${SMTP_PASSWORD}" />
+        <add key="SmtpFromEmail" value="${SMTP_FROM_EMAIL}" />
+        <add key="SmtpToEmail" value="${SMTP_TO_EMAIL}" />
+        <add key="SmtpEnableSsl" value="true" />
+        
+        <!-- Retry Configuration -->
+        <add key="MaxRetryAttempts" value="3" />
+        <add key="RetryDelaySeconds" value="5" />
+        <add key="TimeoutSeconds" value="30" />
     </appSettings>
 </configuration>
-
-<!-- 
-CONFIGURATION EXAMPLES:
-
-1. Run only Emfluence API (detailed records only):
-   <add key="RunEmfluenceApi" value="true" />
-   <add key="RunCouponApi" value="false" />
-
-2. Run only Coupon API:
-   <add key="RunEmfluenceApi" value="false" />
-   <add key="RunCouponApi" value="true" />
-
-       3. Run both APIs:
-          <add key="RunEmfluenceApi" value="true" />
-          <add key="RunCouponApi" value="true" />
-
-       4. Run only the test email method (90-day daily test):
-          <add key="RunEmfluenceApi" value="false" />
-          <add key="RunCouponApi" value="false" />
-          <add key="RunTestEmailMethod" value="true" />
-
-       5. Run test email method with other services:
-          <add key="RunEmfluenceApi" value="true" />
-          <add key="RunCouponApi" value="false" />
-          <add key="RunTestEmailMethod" value="true" />
-
-       6. Use specific date range for Coupon API:
-   <add key="CouponStartDate" value="2024-01-01" />
-   <add key="CouponEndDate" value="2024-01-31" />
-
-5. Use last N days for Coupon API (default):
-   <add key="CouponStartDate" value="" />
-   <add key="CouponEndDate" value="" />
-   <add key="CouponDaysBack" value="30" />
-
-6. Enable file logging:
-   <add key="LogToFile" value="true" />
-   <add key="LogFilePath" value="C:\Logs\DataStudioDataMgr.log" />
-
-7. Disable detailed logging for production:
-   <add key="EnableDetailedLogging" value="false" />
-
-       8. Use local JSON file instead of APIs:
-          Run with command line: DataStudioDataMgr.exe --local
-          Or set: <add key="UseLocalFile" value="true" />
-
-       9. MongoDB Configuration:
-          <add key="MongoDbConnectionString" value="mongodb://localhost:27017" />
-          <add key="MongoDbDatabaseName" value="integration" />
-          <add key="MongoDbEmfluenceCollection" value="emfluence_email" />
-          <add key="EnableMongoDbStorage" value="true" />
-
-       10. Disable MongoDB storage:
-           <add key="EnableMongoDbStorage" value="false" />
-
-       NOTES:
-       - Emfluence API now only fetches detailed records (no summary data)
-       - All detailed records are always fetched with pagination
-       - Output files: all_records_detail.json/csv only
-       - MongoDB storage is enabled by default and stores all email properties
-       - MongoDB collection includes date fields and indexes for performance
-       - Test Email Method: Runs 90-day daily test with dateSentStart/dateSentEnd parameters
-       - Test Email Method creates CSV file: test_daily_emails.csv
--->

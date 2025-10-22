@@ -5,8 +5,9 @@ using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.IO;
 using Newtonsoft.Json;
+using DataStudioDataMgr.Models;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Services.SqlServer
 {
     /// <summary>
     /// Service for handling SQL Server database operations

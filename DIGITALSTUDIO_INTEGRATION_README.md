@@ -273,3 +273,4 @@ The query uses two Common Table Expressions:
 The final SELECT statement formats the data and orders by MetricDate DESC, PostID, Store, and MetricType.
 
 The DigitalStudio SQL Server integration provides a complete solution for retrieving and exporting Campaign Store Metrics data alongside the existing services.
+

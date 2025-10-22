@@ -5360,7 +5360,7 @@
           "UniqueClicks": 26,
           "Unsubscribes": 3,
           "UniqueWebViews": 2,
-          "Views": 111,
+          "Views": 112,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -5389,8 +5389,8 @@
           17921
         ],
         "Metrics": {
-          "Clicks": 21,
-          "UniqueViews": 76,
+          "Clicks": 22,
+          "UniqueViews": 79,
           "Bounces": 0,
           "Forwards": 0,
           "Recipients": 669,
@@ -5400,10 +5400,10 @@
           "WebViews": 2,
           "Complaints": 0,
           "Shares": 0,
-          "UniqueClicks": 19,
+          "UniqueClicks": 20,
           "Unsubscribes": 0,
           "UniqueWebViews": 2,
-          "Views": 122,
+          "Views": 126,
           "UniqueShares": 0
         },
         "ParentEmailID": "",
@@ -5418,11 +5418,183 @@
         "ReplyToName": "Payless Discount Foods",
         "Title": "10.08.25 English Wed ad",
         "DateSent": "2025-10-08T11:00:28"
+      },
+      {
+        "TemplateID": 20767,
+        "ReplyToAddress": "noreply@ballsfoods.com",
+        "UserID": 47845,
+        "DateModified": "2025-10-14T21:42:35",
+        "FromAddress": "noreply@ballsfoods.com",
+        "DeliveryType": "Manual",
+        "Subject": "🏈 Game Day Deals",
+        "DateAdded": "2025-10-14T21:28:57",
+        "CampaignIDs": [
+          17921
+        ],
+        "Metrics": {
+          "Clicks": 35,
+          "UniqueViews": 88,
+          "Bounces": 3,
+          "Forwards": 0,
+          "Recipients": 671,
+          "UniqueForwards": 0,
+          "ClickToViewRate": 0.3,
+          "SendingIssues": 0,
+          "WebViews": 2,
+          "Complaints": 0,
+          "Shares": 0,
+          "UniqueClicks": 28,
+          "Unsubscribes": 1,
+          "UniqueWebViews": 2,
+          "Views": 120,
+          "UniqueShares": 0
+        },
+        "ParentEmailID": "",
+        "Status": "Sent",
+        "Schedule": {
+          "DateScheduled": "",
+          "Confirmed": 0
+        },
+        "AbSplitID": "",
+        "FromName": "Payless Discount Foods",
+        "EmailID": 51659236,
+        "ReplyToName": "Payless Discount Foods",
+        "Title": "10.15.25 English Wed ad",
+        "DateSent": "2025-10-15T11:00:26"
+      },
+      {
+        "TemplateID": 20767,
+        "ReplyToAddress": "noreply@ballsfoods.com",
+        "UserID": 51146,
+        "DateModified": "2025-10-13T16:04:25",
+        "FromAddress": "noreply@ballsfoods.com",
+        "DeliveryType": "Manual",
+        "Subject": "🏈 Touchdown Snacks: Totino’s, Pillsbury & Chex Mix Inside",
+        "DateAdded": "2025-10-13T16:00:10",
+        "CampaignIDs": [
+          17921
+        ],
+        "Metrics": {
+          "Clicks": 5,
+          "UniqueViews": 72,
+          "Bounces": 2,
+          "Forwards": 0,
+          "Recipients": 667,
+          "UniqueForwards": 0,
+          "ClickToViewRate": 0.1,
+          "SendingIssues": 0,
+          "WebViews": 3,
+          "Complaints": 0,
+          "Shares": 0,
+          "UniqueClicks": 5,
+          "Unsubscribes": 1,
+          "UniqueWebViews": 3,
+          "Views": 87,
+          "UniqueShares": 0
+        },
+        "ParentEmailID": "",
+        "Status": "Sent",
+        "Schedule": {
+          "DateScheduled": "",
+          "Confirmed": 0
+        },
+        "AbSplitID": "",
+        "FromName": "Payless Discount Foods",
+        "EmailID": 51644512,
+        "ReplyToName": "Payless Discount Foods",
+        "Title": "10.16.25 RMN - General Mills Game Day",
+        "DateSent": "2025-10-16T12:00:07"
+      },
+      {
+        "TemplateID": 20767,
+        "ReplyToAddress": "noreply@ballsfoods.com",
+        "UserID": 51146,
+        "DateModified": "2025-10-15T19:08:06",
+        "FromAddress": "noreply@ballsfoods.com",
+        "DeliveryType": "Manual",
+        "Subject": "Make Breakfast Better with Honey Bunches of Oats 🍯",
+        "DateAdded": "2025-10-15T19:04:51",
+        "CampaignIDs": [
+          17921
+        ],
+        "Metrics": {
+          "Clicks": 4,
+          "UniqueViews": 72,
+          "Bounces": 1,
+          "Forwards": 0,
+          "Recipients": 667,
+          "UniqueForwards": 0,
+          "ClickToViewRate": 0.1,
+          "SendingIssues": 0,
+          "WebViews": 2,
+          "Complaints": 0,
+          "Shares": 0,
+          "UniqueClicks": 4,
+          "Unsubscribes": 2,
+          "UniqueWebViews": 2,
+          "Views": 86,
+          "UniqueShares": 0
+        },
+        "ParentEmailID": "",
+        "Status": "Sent",
+        "Schedule": {
+          "DateScheduled": "",
+          "Confirmed": 0
+        },
+        "AbSplitID": "",
+        "FromName": "Payless Discount Foods",
+        "EmailID": 51670008,
+        "ReplyToName": "Payless Discount Foods",
+        "Title": "10.21.25 RMN - Post HBO",
+        "DateSent": "2025-10-21T12:00:06"
+      },
+      {
+        "TemplateID": 20767,
+        "ReplyToAddress": "noreply@ballsfoods.com",
+        "UserID": 47845,
+        "DateModified": "2025-10-21T21:50:35",
+        "FromAddress": "noreply@ballsfoods.com",
+        "DeliveryType": "Manual",
+        "Subject": "🍎🍁 Flavors of Fall",
+        "DateAdded": "2025-10-21T21:46:02",
+        "CampaignIDs": [
+          17921
+        ],
+        "Metrics": {
+          "Clicks": 14,
+          "UniqueViews": 52,
+          "Bounces": 1,
+          "Forwards": 0,
+          "Recipients": 668,
+          "UniqueForwards": 0,
+          "ClickToViewRate": 0.3,
+          "SendingIssues": 0,
+          "WebViews": 2,
+          "Complaints": 0,
+          "Shares": 0,
+          "UniqueClicks": 13,
+          "Unsubscribes": 2,
+          "UniqueWebViews": 2,
+          "Views": 65,
+          "UniqueShares": 0
+        },
+        "ParentEmailID": "",
+        "Status": "Sent",
+        "Schedule": {
+          "DateScheduled": "",
+          "Confirmed": 0
+        },
+        "AbSplitID": "",
+        "FromName": "Payless Discount Foods",
+        "EmailID": 51723850,
+        "ReplyToName": "Payless Discount Foods",
+        "Title": "10.22.25 English Wed ad",
+        "DateSent": "2025-10-22T11:00:34"
       }
     ],
     "Paging": null
   },
   "Success": 1,
   "Code": 200,
-  "RequestID": "ec32dd21-d1e6-4a17-95bb-8ff8b85b6677"
+  "RequestID": "ce63c9f8-e572-4d5f-b7dc-dfe3bcfe4dcf"
 }

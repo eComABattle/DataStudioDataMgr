@@ -1,6 +1,6 @@
 using System;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Models
 {
     /// <summary>
     /// Represents Campaign Store Metrics data from the DigitalStudio SQL Server database
@@ -20,3 +20,4 @@ namespace DataStudioDataMgr
         public int MetricDelta { get; set; }
     }
 }
+

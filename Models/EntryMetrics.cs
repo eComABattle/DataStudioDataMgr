@@ -1,6 +1,6 @@
 using System;
 
-namespace DataStudioDataMgr
+namespace DataStudioDataMgr.Models
 {
     /// <summary>
     /// Represents Entry Metrics data from the DigitalStudio SQL Server database
@@ -18,3 +18,4 @@ namespace DataStudioDataMgr
         public string MetaData { get; set; }
     }
 }
+
