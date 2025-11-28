@@ -55,6 +55,24 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     Directory.CreateDirectory(_localDownloadPath);
                     Console.WriteLine($"Created local directory: {_localDownloadPath}");
                 }
+                else
+                {
+                    // Clear existing files from downloads folder
+                    var existingFiles = Directory.GetFiles(_localDownloadPath);
+                    foreach (var file in existingFiles)
+                    {
+                        try
+                        {
+                            File.Delete(file);
+                            Console.WriteLine($"Deleted existing file: {Path.GetFileName(file)}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Warning: Could not delete file {Path.GetFileName(file)}: {ex.Message}");
+                        }
+                    }
+                    Console.WriteLine($"Cleared {existingFiles.Length} existing file(s) from downloads folder");
+                }
 
                 Console.WriteLine($"Connecting to SFTP server: {_host}:{_port}");
                 
@@ -66,12 +84,18 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     {
                         Console.WriteLine("Successfully connected to SFTP server");
                         
-                        // Define the subdirectories to search
+                        // Define the subdirectories to search (exclude Archive directory)
                         var subdirectories = new[] { "EmailData", "KioskData", "WebsiteData" };
                         int totalFilesDownloaded = 0;
                         
                         foreach (var subdir in subdirectories)
                         {
+                            // Skip Archive directory explicitly
+                            if (subdir.Equals("Archive", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+                            
                             Console.WriteLine($"Searching in subdirectory: {subdir}");
                             
                             try
@@ -82,8 +106,15 @@ namespace DataStudioDataMgr.Services.ShopToCook
                                 Console.WriteLine($"Found {files.Count()} files in {subdir}");
                                 
                                 // Download CSV files from this subdirectory
+                                // Skip files in Archive subdirectories
                                 foreach (var file in files)
                                 {
+                                    // Skip Archive directory and files within Archive subdirectories
+                                    if (file.IsDirectory && file.Name.Equals("Archive", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        continue;
+                                    }
+                                    
                                     if (file.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
                                     {
                                         Console.WriteLine($"Downloading file: {subdir}/{file.Name}");

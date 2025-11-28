@@ -7,6 +7,7 @@ using DataStudioDataMgr.Services.MediaStudio;
 using DataStudioDataMgr.Services.DigitalStudio;
 using DataStudioDataMgr.Services.MongoDb;
 using DataStudioDataMgr.Services.ShopToCook;
+using DataStudioDataMgr.Services.Brick;
 using DataStudioDataMgr.Models;
 using DataStudioDataMgr.Configuration;
 using System;
@@ -42,9 +43,13 @@ class Program
                 bool runDigitalStudioData = bool.Parse(ConfigurationManager.AppSettings["RunDigitalStudioData"] ?? "false");
                 bool runEntryMetricsData = bool.Parse(ConfigurationManager.AppSettings["RunEntryMetricsData"] ?? "false");
                 bool runShopToCookData = bool.Parse(ConfigurationManager.AppSettings["RunShopToCookData"] ?? "false");
+                bool runBrickCampaignData = bool.Parse(ConfigurationManager.AppSettings["RunBrickCampaignData"] ?? "false");
+                bool runBrickDailyStatistics = bool.Parse(ConfigurationManager.AppSettings["RunBrickDailyStatistics"] ?? "false");
+                bool runBrickBackupDeleteAndReprocess = bool.Parse(ConfigurationManager.AppSettings["RunBrickBackupDeleteAndReprocess"] ?? "false");
                 bool testMongoDbConnection = bool.Parse(ConfigurationManager.AppSettings["TestMongoDbConnection"] ?? "false");
+                bool testBrickConnection = bool.Parse(ConfigurationManager.AppSettings["TestBrickConnection"] ?? "false");
 
-                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData && !runShopToCookData && !testMongoDbConnection)
+                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData && !runShopToCookData && !runBrickCampaignData && !runBrickDailyStatistics && !runBrickBackupDeleteAndReprocess && !testMongoDbConnection && !testBrickConnection)
                 {
                     LogMessage("No services configured to run. Check App.config settings.");
                     return;
@@ -146,11 +151,36 @@ class Program
                     await ProcessShopToCookDataAsync();
                 }
 
+                if (runBrickCampaignData)
+                {
+                    LogMessage("=== RUNNING BRICK CAMPAIGN DATA SERVICE ===");
+                    await ProcessBrickCampaignDataAsync();
+                }
+
+                if (runBrickDailyStatistics)
+                {
+                    LogMessage("=== RUNNING BRICK DAILY STATISTICS SERVICE ===");
+                    await ProcessBrickDailyStatisticsAsync();
+                }
+
+                if (runBrickBackupDeleteAndReprocess)
+                {
+                    LogMessage("=== RUNNING BRICK BACKUP, DELETE, AND REPROCESS ===");
+                    await BackupDeleteAndReprocessBrickDataAsync();
+                }
+
                 // Test MongoDB connection if enabled
                 if (testMongoDbConnection)
                 {
                     LogMessage("=== TESTING MONGODB CONNECTION ===");
                     await TestMongoDbConnectionAsync();
+                }
+
+                // Test Brick connection if enabled
+                if (testBrickConnection)
+                {
+                    LogMessage("=== TESTING BRICK CONNECTION ===");
+                    await TestBrickConnectionAsync();
                 }
 
             }
@@ -789,6 +819,132 @@ class Program
             {
                 LogMessage($"Inner exception: {ex.InnerException.Message}");
             }
+        }
+    }
+
+    static async Task ProcessBrickCampaignDataAsync()
+    {
+        BrickService brickService = null;
+        try
+        {
+            LogMessage("Initializing Brick service...");
+            brickService = new BrickService();
+
+            LogMessage("=== PROCESSING BRICK CAMPAIGN DATA ===");
+            await brickService.ProcessBrickCampaignDataAsync();
+
+            LogMessage("Brick campaign data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing Brick campaign data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid Brick API credentials");
+            LogMessage("  - Network connectivity issues");
+            LogMessage("  - Invalid endpoint URL");
+            LogMessage("  - Authentication problems");
+        }
+        finally
+        {
+            brickService?.Dispose();
+        }
+    }
+
+    static async Task ProcessBrickDailyStatisticsAsync()
+    {
+        BrickService brickService = null;
+        try
+        {
+            LogMessage("Initializing Brick service...");
+            brickService = new BrickService();
+
+            LogMessage("=== PROCESSING BRICK DAILY STATISTICS ===");
+            await brickService.ProcessBrickDailyStatisticsAsync();
+
+            LogMessage("Brick daily statistics processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing Brick daily statistics: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid Brick API credentials");
+            LogMessage("  - Network connectivity issues");
+            LogMessage("  - Invalid endpoint URL");
+            LogMessage("  - Invalid campaign ID or date range");
+            LogMessage("  - Authentication problems");
+        }
+        finally
+        {
+            brickService?.Dispose();
+        }
+    }
+
+    static async Task TestBrickConnectionAsync()
+    {
+        BrickApiService brickApiService = null;
+        try
+        {
+            LogMessage("Testing Brick API connection...");
+            brickApiService = new BrickApiService();
+            
+            bool connectionSuccessful = await brickApiService.TestConnectionAsync(1);
+            
+            if (connectionSuccessful)
+            {
+                LogMessage("Brick API connection test successful!");
+            }
+            else
+            {
+                LogMessage("Brick API connection test failed!");
+                LogMessage("This might be due to:");
+                LogMessage("  - Invalid username/password");
+                LogMessage("  - Incorrect endpoint URL");
+                LogMessage("  - Network connectivity issues");
+                LogMessage("  - Brick server not accessible");
+                LogMessage("  - Authentication problems");
+            }
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error testing Brick connection: {ex.Message}");
+            LogMessage($"Error type: {ex.GetType().Name}");
+            if (ex.InnerException != null)
+            {
+                LogMessage($"Inner exception: {ex.InnerException.Message}");
+            }
+        }
+        finally
+        {
+            brickApiService?.Dispose();
+        }
+    }
+
+    static async Task BackupDeleteAndReprocessBrickDataAsync()
+    {
+        BrickService brickService = null;
+        try
+        {
+            LogMessage("Initializing Brick service...");
+            brickService = new BrickService();
+
+            LogMessage("=== BACKING UP, DELETING, AND REPROCESSING BRICK DATA ===");
+            await brickService.BackupDeleteAndReprocessAsync(OutputDirectory);
+
+            LogMessage("Brick data backup, delete, and reprocess completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error during Brick data backup, delete, and reprocess: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - MongoDB connection issues");
+            LogMessage("  - Invalid Brick API credentials");
+            LogMessage("  - Network connectivity issues");
+            LogMessage("  - Invalid endpoint URL");
+            LogMessage("  - Authentication problems");
+        }
+        finally
+        {
+            brickService?.Dispose();
         }
     }
 }

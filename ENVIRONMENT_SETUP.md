@@ -37,6 +37,11 @@ STORE_8_ACCESS_TOKEN=your_store_8_access_token
 STORE_9_ACCESS_TOKEN=your_store_9_access_token
 ```
 
+### Brick API Configuration
+```bash
+BRICK_PASSWORD=your_brick_password
+```
+
 ## Setting Environment Variables
 
 ### Windows (Command Prompt)
@@ -58,6 +63,7 @@ set STORE_6_ACCESS_TOKEN=your_store_6_access_token
 set STORE_7_ACCESS_TOKEN=your_store_7_access_token
 set STORE_8_ACCESS_TOKEN=your_store_8_access_token
 set STORE_9_ACCESS_TOKEN=your_store_9_access_token
+set BRICK_PASSWORD=your_brick_password
 ```
 
 ### Windows (PowerShell)
@@ -79,6 +85,7 @@ $env:STORE_6_ACCESS_TOKEN="your_store_6_access_token"
 $env:STORE_7_ACCESS_TOKEN="your_store_7_access_token"
 $env:STORE_8_ACCESS_TOKEN="your_store_8_access_token"
 $env:STORE_9_ACCESS_TOKEN="your_store_9_access_token"
+$env:BRICK_PASSWORD="your_brick_password"
 ```
 
 ### Windows (System Environment Variables)
@@ -105,6 +112,7 @@ export STORE_6_ACCESS_TOKEN=your_store_6_access_token
 export STORE_7_ACCESS_TOKEN=your_store_7_access_token
 export STORE_8_ACCESS_TOKEN=your_store_8_access_token
 export STORE_9_ACCESS_TOKEN=your_store_9_access_token
+export BRICK_PASSWORD=your_brick_password
 ```
 
 ## Configuration Files

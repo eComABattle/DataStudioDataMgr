@@ -24,6 +24,9 @@
         <add key="RunShopToCookData" value="false" />
         <add key="TestShopToCookCsv" value="false" />
         <add key="TestMongoDbConnection" value="false" />
+        <add key="RunBrickCampaignData" value="false" />
+        <add key="RunBrickDailyStatistics" value="true" />
+        <add key="TestBrickConnection" value="false" />
         
         <!-- ShopToCook SFTP Configuration -->
         <add key="ShopToCookSftpHost" value="sftp.ecomsystems.com" />
@@ -32,8 +35,23 @@
                 <add key="ShopToCookSftpPassword" value="%SHOPTOCOOK_SFTP_PASSWORD%" />
         <add key="ShopToCookLocalPath" value="downloads" />
         <add key="ShopToCookCleanupFiles" value="false" />
-
-                <!-- Emfluence API Configuration -->
+        
+        <!-- Brick API Configuration -->
+        <add key="BrickBaseUrl" value="https://serve.withbrick.com" />
+        <add key="BrickUsername" value="awg" />
+        <add key="BrickPassword" value="%BRICK_PASSWORD%" />
+        <add key="BrickDefaultCampaignId" value="1" />
+        <add key="BrickDailyStatisticsCampaignId" value="1" />
+        <add key="BrickDailyStatisticsStartDate" value="" />
+        <add key="BrickDailyStatisticsEndDate" value="" />
+        <add key="BrickDailyStatisticsEndDateAddDays" value="7" />
+        <add key="BrickDefaultDataType" value="JSON" />
+        <add key="BrickTimeoutSeconds" value="30" />
+        <add key="BrickEnableLogging" value="true" />
+        <add key="BrickStartDate" value="2025-09-01" />
+        <add key="BrickEndDate" value="2025-10-01" />
+        
+        <!-- Emfluence API Configuration -->
                 <add key="EmfluenceAccessToken" value="%EMFLUENCE_ACCESS_TOKEN%" />
                 <add key="EmfluenceDeliveryType" value="manual" />
                 <add key="EmfluenceStatus" value="sent" />
