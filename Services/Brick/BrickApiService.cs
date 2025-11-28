@@ -87,13 +87,7 @@ namespace DataStudioDataMgr.Services.Brick
         public async Task<bool> TestConnectionAsync(int advertisingId = 1)
         {
             try
-            {
-                //var client = new HttpClient();
-                //var request = new HttpRequestMessage(HttpMethod.Get, "https://serve.withbrick.com/api/v1/cam/adv/1");
-                //request.Headers.Add("Authorization", "Basic YXdnOkFXR2JkdXpaeWs1JA==");
-                //var response = await client.SendAsync(request);
-                //response.EnsureSuccessStatusCode();
-                //Console.WriteLine(await response.Content.ReadAsStringAsync());
+            {              
 
 
                 Console.WriteLine($"Testing Brick API connection...");
