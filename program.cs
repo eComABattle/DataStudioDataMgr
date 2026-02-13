@@ -8,6 +8,9 @@ using DataStudioDataMgr.Services.DigitalStudio;
 using DataStudioDataMgr.Services.MongoDb;
 using DataStudioDataMgr.Services.ShopToCook;
 using DataStudioDataMgr.Services.Brick;
+using DataStudioDataMgr.Services.GiveX;
+using DataStudioDataMgr.Services.BrData;
+using DataStudioDataMgr.Services.AppCard;
 using DataStudioDataMgr.Models;
 using DataStudioDataMgr.Configuration;
 using System;
@@ -43,13 +46,19 @@ class Program
                 bool runDigitalStudioData = bool.Parse(ConfigurationManager.AppSettings["RunDigitalStudioData"] ?? "false");
                 bool runEntryMetricsData = bool.Parse(ConfigurationManager.AppSettings["RunEntryMetricsData"] ?? "false");
                 bool runShopToCookData = bool.Parse(ConfigurationManager.AppSettings["RunShopToCookData"] ?? "false");
+                bool runGiveXEmail = bool.Parse(ConfigurationManager.AppSettings["RunGiveXEmail"] ?? "false");
+                bool runGiveXEmailData = bool.Parse(ConfigurationManager.AppSettings["RunGiveXEmailData"] ?? "false");
+                bool runGiveXLoyaltyData = bool.Parse(ConfigurationManager.AppSettings["RunGiveXLoyaltyData"] ?? "false");
+                bool runGiveXCouponData = bool.Parse(ConfigurationManager.AppSettings["RunGiveXCouponData"] ?? "false");
+                bool runBrDataPOSData = bool.Parse(ConfigurationManager.AppSettings["RunBrDataPOSData"] ?? "false");
+                bool runAppCardData = bool.Parse(ConfigurationManager.AppSettings["RunAppCardData"] ?? "true");
                 bool runBrickCampaignData = bool.Parse(ConfigurationManager.AppSettings["RunBrickCampaignData"] ?? "false");
                 bool runBrickDailyStatistics = bool.Parse(ConfigurationManager.AppSettings["RunBrickDailyStatistics"] ?? "false");
                 bool runBrickBackupDeleteAndReprocess = bool.Parse(ConfigurationManager.AppSettings["RunBrickBackupDeleteAndReprocess"] ?? "false");
                 bool testMongoDbConnection = bool.Parse(ConfigurationManager.AppSettings["TestMongoDbConnection"] ?? "false");
                 bool testBrickConnection = bool.Parse(ConfigurationManager.AppSettings["TestBrickConnection"] ?? "false");
 
-                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData && !runShopToCookData && !runBrickCampaignData && !runBrickDailyStatistics && !runBrickBackupDeleteAndReprocess && !testMongoDbConnection && !testBrickConnection)
+                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData && !runShopToCookData && !runGiveXEmail && !runGiveXEmailData && !runGiveXLoyaltyData && !runGiveXCouponData && !runBrDataPOSData && !runAppCardData && !runBrickCampaignData && !runBrickDailyStatistics && !runBrickBackupDeleteAndReprocess && !testMongoDbConnection && !testBrickConnection)
                 {
                     LogMessage("No services configured to run. Check App.config settings.");
                     return;
@@ -151,6 +160,36 @@ class Program
                     await ProcessShopToCookDataAsync();
                 }
 
+                if (runGiveXEmail || runGiveXEmailData)
+                {
+                    LogMessage("=== RUNNING GIVEX EMAIL DATA SERVICE ===");
+                    await ProcessGiveXEmailDataAsync();
+                }
+
+                if (runGiveXLoyaltyData)
+                {
+                    LogMessage("=== RUNNING GIVEX LOYALTY DATA SERVICE ===");
+                    await ProcessGiveXLoyaltyDataAsync();
+                }
+
+                if (runGiveXCouponData)
+                {
+                    LogMessage("=== RUNNING GIVEX COUPON DATA SERVICE ===");
+                    await ProcessGiveXCouponDataAsync();
+                }
+
+                if (runBrDataPOSData)
+                {
+                    LogMessage("=== RUNNING BRDATA POS DATA SERVICE ===");
+                    await ProcessBrDataPOSDataAsync();
+                }
+
+                if (runAppCardData)
+                {
+                    LogMessage("=== RUNNING APPCARD DATA SERVICE ===");
+                    await ProcessAppCardDataAsync();
+                }
+
                 if (runBrickCampaignData)
                 {
                     LogMessage("=== RUNNING BRICK CAMPAIGN DATA SERVICE ===");
@@ -159,8 +198,18 @@ class Program
 
                 if (runBrickDailyStatistics)
                 {
-                    LogMessage("=== RUNNING BRICK DAILY STATISTICS SERVICE ===");
-                    await ProcessBrickDailyStatisticsAsync();
+                    // Skip if ProcessBrickCampaignDataAsync was already called, as it already processes daily statistics for all campaigns
+                    if (!runBrickCampaignData)
+                    {
+                        LogMessage("=== RUNNING BRICK DAILY STATISTICS SERVICE ===");
+                        await ProcessBrickDailyStatisticsAsync();
+                    }
+                    else
+                    {
+                        LogMessage("=== SKIPPING BRICK DAILY STATISTICS SERVICE ===");
+                        LogMessage("ProcessBrickCampaignDataAsync already processed daily statistics for all campaigns.");
+                        LogMessage("To avoid duplication, only enable RunBrickCampaignData (which includes daily statistics processing).");
+                    }
                 }
 
                 if (runBrickBackupDeleteAndReprocess)
@@ -345,9 +394,17 @@ class Program
         CouponApiService couponService = null;
         try
         {
-            string startDate = ConfigurationManager.AppSettings["CouponStartDate"];
-            string endDate = ConfigurationManager.AppSettings["CouponEndDate"];
-            int daysBack = int.Parse(ConfigurationManager.AppSettings["CouponDaysBack"] ?? "30");
+            //string startDate = ConfigurationManager.AppSettings["CouponStartDate"];
+            //string endDate = ConfigurationManager.AppSettings["CouponEndDate"];
+
+            DateTime startOfDay = DateTime.Now.Date.AddDays(-1);
+            DateTime endOfDay = startOfDay.AddDays(1).AddTicks(-1);
+
+            string startDate = startOfDay.ToString();
+            string endDate = endOfDay.ToString();
+
+
+            int daysBack = int.Parse(ConfigurationManager.AppSettings["CouponDaysBack"] ?? "1");
             string statusesConfig = ConfigurationManager.AppSettings["CouponStatuses"] ?? "string";
             LogMessage("Initializing Coupon API service...");
             couponService = new CouponApiService();
@@ -360,7 +417,7 @@ class Program
             else
             {
                 LogMessage($"Using last {daysBack} days");
-                couponResult = await couponService.GetCouponRedemptionReportForLastDaysAsync(daysBack);
+                couponResult = await couponService.GetCouponRedemptionReportForLastDaysAsync(startOfDay,endOfDay, daysBack);
             }
             if (couponResult?.data == null)
             {
@@ -756,6 +813,126 @@ class Program
         return Task.CompletedTask;
     }
 
+    static async Task ProcessAppCardDataAsync()
+    {
+        AppCardService appCardService = null;
+        try
+        {
+            LogMessage("Initializing AppCard service...");
+            appCardService = new AppCardService();
+
+            LogMessage("=== PROCESSING APPCARD DATA ===");
+            await appCardService.ProcessAppCardDataAsync();
+
+            LogMessage("AppCard data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing AppCard data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid SFTP credentials");
+            LogMessage("  - Network connectivity issues");
+            LogMessage("  - MongoDB connection problems");
+            LogMessage("  - CSV file format issues");
+        }
+    }
+
+    static async Task ProcessGiveXEmailDataAsync()
+    {
+        GiveXService giveXService = null;
+        try
+        {
+            LogMessage("Initializing GiveX service...");
+            giveXService = new GiveXService();
+
+            LogMessage("=== PROCESSING GIVEX EMAIL DATA ===");
+            await giveXService.ProcessGiveXEmailDataAsync();
+
+            LogMessage("GiveX email data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing GiveX email data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Network share access issues");
+            LogMessage("  - Network connectivity problems");
+            LogMessage("  - MongoDB connection problems");
+            LogMessage("  - CSV file format issues");
+        }
+    }
+
+    static async Task ProcessGiveXLoyaltyDataAsync()
+    {
+        GiveXService giveXService = null;
+        try
+        {
+            LogMessage("Initializing GiveX service...");
+            giveXService = new GiveXService();
+
+            LogMessage("=== PROCESSING GIVEX LOYALTY DATA ===");
+            await giveXService.ProcessGiveXLoyaltyDataAsync();
+
+            LogMessage("GiveX loyalty data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing GiveX loyalty data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Network share access issues");
+            LogMessage("  - Network connectivity problems");
+            LogMessage("  - MongoDB connection problems");
+            LogMessage("  - CSV file format issues");
+        }
+    }
+
+    static async Task ProcessGiveXCouponDataAsync()
+    {
+        GiveXService giveXService = null;
+        try
+        {
+            LogMessage("Initializing GiveX service...");
+            giveXService = new GiveXService();
+
+            LogMessage("=== PROCESSING GIVEX COUPON DATA ===");
+            await giveXService.ProcessGiveXCouponDataAsync();
+
+            LogMessage("GiveX coupon data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing GiveX coupon data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Network share access issues");
+            LogMessage("  - Network connectivity problems");
+            LogMessage("  - MongoDB connection problems");
+            LogMessage("  - CSV file format issues");
+        }
+    }
+
+    static async Task ProcessBrDataPOSDataAsync()
+    {
+        BrDataService brDataService = null;
+        try
+        {
+            LogMessage("Initializing BrData service...");
+            brDataService = new BrDataService();
+
+            LogMessage("=== PROCESSING BRDATA POS DATA ===");
+            await brDataService.ProcessBrDataPosDataAsync();
+
+            LogMessage("BrData POS data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing BrData POS data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Network share access issues");
+            LogMessage("  - Network connectivity problems");
+            LogMessage("  - MongoDB connection problems");
+            LogMessage("  - CSV file format issues");
+        }
+    }
+
     static async Task ProcessShopToCookDataAsync()
     {
         ShopToCookService shopToCookService = null;
@@ -855,10 +1032,14 @@ class Program
         BrickService brickService = null;
         try
         {
+            LogMessage("WARNING: This method uses configuration values for dates (deprecated approach).");
+            LogMessage("The current use case requires dates from the Brick Campaign endpoint.");
+            LogMessage("Consider using ProcessBrickCampaignDataAsync instead, which gets dates from campaign data.");
+            
             LogMessage("Initializing Brick service...");
             brickService = new BrickService();
 
-            LogMessage("=== PROCESSING BRICK DAILY STATISTICS ===");
+            LogMessage("=== PROCESSING BRICK DAILY STATISTICS (DEPRECATED - Uses Config Values) ===");
             await brickService.ProcessBrickDailyStatisticsAsync();
 
             LogMessage("Brick daily statistics processing completed successfully.");

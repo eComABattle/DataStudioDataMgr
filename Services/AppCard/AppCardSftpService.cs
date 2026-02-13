@@ -1,48 +1,62 @@
+using Renci.SshNet;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using Renci.SshNet;
 using System.Configuration;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
-namespace DataStudioDataMgr.Services.ShopToCook
+namespace DataStudioDataMgr.Services.AppCard
 {
     /// <summary>
-    /// Service for downloading CSV files from ShopToCook SFTP server
+    /// Service for downloading CSV files from AppCard SFTP server
     /// </summary>
-    public class ShopToCookSftpService
+    public class AppCardSftpService
     {
         private readonly string _host;
         private readonly int _port;
         private readonly string _username;
         private readonly string _password;
         private readonly string _localDownloadPath;
+        private readonly string _remotePath;
 
-        public ShopToCookSftpService()
+        public AppCardSftpService()
         {
-            _host = ConfigurationManager.AppSettings["ShopToCookSftpHost"] ?? "sftp.ecomsystems.com";
-            _port = int.Parse(ConfigurationManager.AppSettings["ShopToCookSftpPort"] ?? "22");
-            _username = ConfigurationManager.AppSettings["ShopToCookSftpUsername"] ?? "ShopToCookAdmin";
+            // Read SFTP host from environment variable first, then App.config, then default
+            var hostEnv = System.Environment.GetEnvironmentVariable("APPCARD_SFTP_HOST");
+            //var host = hostEnv ?? ConfigurationManager.AppSettings["AppCardSftpHost"] ?? "us-east-1.sftpcloud.io";
+            var host = "sftp.ecomsystems.com";
+
+            // Expand environment variables in case App.config contains %VAR% format
+            _host = System.Environment.ExpandEnvironmentVariables(host);
             
-            // Expand environment variables in SFTP password
-            var password = ConfigurationManager.AppSettings["ShopToCookSftpPassword"] ?? "GFGf4l3pv8ZIluhnPFD6u6NRMRuPgEBa";
-            _password = Environment.ExpandEnvironmentVariables(password);
+            _port = int.Parse(ConfigurationManager.AppSettings["AppCardSftpPort"] ?? "22");
+            _username = ConfigurationManager.AppSettings["AppCardSftpUsername"] ?? "awgAppCard";
             
-            _localDownloadPath = ConfigurationManager.AppSettings["ShopToCookLocalPath"] ?? "downloads";
+            // Read SFTP password from environment variable first, then App.config, then default
+            var passwordEnv = System.Environment.GetEnvironmentVariable("APPCARD_SFTP_PASSWORD");
+            var password = passwordEnv ?? ConfigurationManager.AppSettings["AppCardSftpPassword"] ?? "";
+            
+            // Expand environment variables in case App.config contains %VAR% format
+            //_password = System.Environment.ExpandEnvironmentVariables(password);
+            _password = "mwQ96H0qBPO1eKKwbRpTSnpQIlcR2yDE";
+
+            _localDownloadPath = ConfigurationManager.AppSettings["AppCardLocalPath"] ?? "downloads\\appcard";
+            _remotePath = ConfigurationManager.AppSettings["AppCardSftpRemotePath"] ?? "awg_appcard/Incoming";
         }
 
-        public ShopToCookSftpService(string host, int port, string username, string password, string localPath)
+        public AppCardSftpService(string host, int port, string username, string password, string localPath, string remotePath)
         {
             _host = host;
             _port = port;
             _username = username;
             _password = password;
             _localDownloadPath = localPath;
+            _remotePath = remotePath;
         }
 
         /// <summary>
-        /// Downloads all ShopToCook CSV files from SFTP server subdirectories
+        /// Downloads all AppCard CSV files from SFTP server
         /// </summary>
         /// <returns>Local download directory path</returns>
         public async Task<string> DownloadCsvFilesAsync()
@@ -71,10 +85,13 @@ namespace DataStudioDataMgr.Services.ShopToCook
                             Console.WriteLine($"Warning: Could not delete file {Path.GetFileName(file)}: {ex.Message}");
                         }
                     }
-                    Console.WriteLine($"Cleared {existingFiles.Length} existing file(s) from downloads folder");
+                    if (existingFiles.Length > 0)
+                    {
+                        Console.WriteLine($"Cleared {existingFiles.Length} existing file(s) from downloads folder");
+                    }
                 }
 
-                Console.WriteLine($"Connecting to SFTP server: {_host}:{_port}");
+                Console.WriteLine($"Connecting to AppCard SFTP server: {_host}:{_port}");
                 
                 using (var client = new SftpClient(_host, _port, _username, _password))
                 {
@@ -83,11 +100,11 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     if (client.IsConnected)
                     {
                         Console.WriteLine("Successfully connected to SFTP server");
-                        
+
                         // Define the subdirectories to search (exclude Archive directory)
-                        var subdirectories = new[] { "EmailData", "KioskData", "WebsiteData" };
+                        var subdirectories = new[] { "Incoming" };
                         int totalFilesDownloaded = 0;
-                        
+
                         foreach (var subdir in subdirectories)
                         {
                             // Skip Archive directory explicitly
@@ -95,16 +112,16 @@ namespace DataStudioDataMgr.Services.ShopToCook
                             {
                                 continue;
                             }
-                            
+
                             Console.WriteLine($"Searching in subdirectory: {subdir}");
-                            
+
                             try
                             {
                                 // List files in the subdirectory
                                 var files = await Task.Run(() => client.ListDirectory($"./{subdir}"));
-                                
+
                                 Console.WriteLine($"Found {files.Count()} files in {subdir}");
-                                
+
                                 // Download CSV files from this subdirectory
                                 // Skip files in Archive subdirectories
                                 foreach (var file in files)
@@ -114,20 +131,20 @@ namespace DataStudioDataMgr.Services.ShopToCook
                                     {
                                         continue;
                                     }
-                                    
+
                                     if (file.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
                                     {
                                         Console.WriteLine($"Downloading file: {subdir}/{file.Name}");
-                                        
-                                        // Create subdirectory-specific filename to avoid conflicts
-                                        var localFileName = $"{subdir}_{file.Name}";
+
+                                        // Use original filename without prefix
+                                        var localFileName = file.Name;
                                         var localFilePath = Path.Combine(_localDownloadPath, localFileName);
-                                        
+
                                         using (var localFileStream = File.Create(localFilePath))
                                         {
                                             await Task.Run(() => client.DownloadFile($"./{subdir}/{file.Name}", localFileStream));
                                         }
-                                        
+
                                         totalFilesDownloaded++;
                                         Console.WriteLine($"Successfully downloaded: {subdir}/{file.Name} as {localFileName}");
                                     }
@@ -139,7 +156,7 @@ namespace DataStudioDataMgr.Services.ShopToCook
                                 // Continue with other subdirectories
                             }
                         }
-                        
+
                         if (totalFilesDownloaded == 0)
                         {
                             Console.WriteLine("No CSV files found in any subdirectories");
@@ -148,29 +165,28 @@ namespace DataStudioDataMgr.Services.ShopToCook
                         {
                             Console.WriteLine($"Total CSV files downloaded: {totalFilesDownloaded}");
                         }
-                        
+
                         return _localDownloadPath;
                     }
                     else
                     {
-                        throw new Exception("Failed to connect to SFTP server");
+                        throw new Exception("Failed to connect to AppCard SFTP server");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error downloading files from SFTP: {ex.Message}");
+                Console.WriteLine($"Error downloading files from AppCard SFTP: {ex.Message}");
                 throw;
             }
         }
 
         /// <summary>
-        /// Downloads a specific CSV file from SFTP server subdirectories
+        /// Downloads a specific CSV file from SFTP server
         /// </summary>
-        /// <param name="remoteFileName">Name of the file to download (without subdirectory)</param>
-        /// <param name="subdirectory">Subdirectory to search in (EmailData, KioskData, WebsiteData)</param>
+        /// <param name="remoteFileName">Name of the file to download</param>
         /// <returns>Local file path of downloaded file</returns>
-        public async Task<string> DownloadCsvFileAsync(string remoteFileName, string subdirectory = null)
+        public async Task<string> DownloadCsvFileAsync(string remoteFileName)
         {
             try
             {
@@ -180,7 +196,7 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     Directory.CreateDirectory(_localDownloadPath);
                 }
 
-                Console.WriteLine($"Connecting to SFTP server to download: {remoteFileName}");
+                Console.WriteLine($"Connecting to AppCard SFTP server to download: {remoteFileName}");
                 
                 using (var client = new SftpClient(_host, _port, _username, _password))
                 {
@@ -188,83 +204,43 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     
                     if (client.IsConnected)
                     {
-                        Console.WriteLine("Successfully connected to SFTP server");
+                        Console.WriteLine("Successfully connected to AppCard SFTP server");
                         
-                        string remotePath = null;
-                        string localFileName = null;
-                        
-                        if (!string.IsNullOrEmpty(subdirectory))
-                        {
-                            // Download from specific subdirectory
-                            remotePath = $"./{subdirectory}/{remoteFileName}";
-                            localFileName = $"{subdirectory}_{remoteFileName}";
-                        }
-                        else
-                        {
-                            // Search in all subdirectories
-                            var subdirectories = new[] { "EmailData", "KioskData", "WebsiteData" };
-                            
-                            foreach (var subdir in subdirectories)
-                            {
-                                try
-                                {
-                                    var files = await Task.Run(() => client.ListDirectory($"./{subdir}"));
-                                    var file = files.FirstOrDefault(f => f.Name.Equals(remoteFileName, StringComparison.OrdinalIgnoreCase));
-                                    
-                                    if (file != null)
-                                    {
-                                        remotePath = $"./{subdir}/{remoteFileName}";
-                                        localFileName = $"{subdir}_{remoteFileName}";
-                                        Console.WriteLine($"Found file in subdirectory: {subdir}");
-                                        break;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"Error searching in {subdir}: {ex.Message}");
-                                }
-                            }
-                            
-                            if (string.IsNullOrEmpty(remotePath))
-                            {
-                                throw new FileNotFoundException($"File {remoteFileName} not found in any subdirectory");
-                            }
-                        }
-                        
-                        var localFilePath = Path.Combine(_localDownloadPath, localFileName);
+                        string remotePath = $"./{_remotePath}/{remoteFileName}";
+                        var localFilePath = Path.Combine(_localDownloadPath, remoteFileName);
                         
                         using (var localFileStream = File.Create(localFilePath))
                         {
                             await Task.Run(() => client.DownloadFile(remotePath, localFileStream));
                         }
                         
-                        Console.WriteLine($"Successfully downloaded: {remotePath} as {localFileName}");
+                        Console.WriteLine($"Successfully downloaded: {remotePath} as {remoteFileName}");
                         return localFilePath;
                     }
                     else
                     {
-                        throw new Exception("Failed to connect to SFTP server");
+                        throw new Exception("Failed to connect to AppCard SFTP server");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error downloading file {remoteFileName} from SFTP: {ex.Message}");
+                Console.WriteLine($"Error downloading file {remoteFileName} from AppCard SFTP: {ex.Message}");
                 throw;
             }
         }
 
         /// <summary>
-        /// Lists all files in SFTP server subdirectories
+        /// Lists all files in SFTP server directory
         /// </summary>
-        /// <returns>List of file names with their subdirectory paths</returns>
+        /// <returns>List of file names</returns>
         public async Task<List<string>> ListFilesAsync()
         {
             var fileNames = new List<string>();
             
             try
             {
-                Console.WriteLine($"Connecting to SFTP server to list files: {_host}:{_port}");
+                Console.WriteLine($"Connecting to AppCard SFTP server to list files: {_host}:{_port}");
                 
                 using (var client = new SftpClient(_host, _port, _username, _password))
                 {
@@ -272,32 +248,18 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     
                     if (client.IsConnected)
                     {
-                        Console.WriteLine("Successfully connected to SFTP server");
+                        Console.WriteLine("Successfully connected to AppCard SFTP server");
+                        Console.WriteLine($"Listing files in: {_remotePath}");
                         
-                        // Define the subdirectories to search
-                        var subdirectories = new[] { "EmailData", "KioskData", "WebsiteData" };
+                        var files = await Task.Run(() => client.ListDirectory($"./{_remotePath}"));
                         
-                        foreach (var subdir in subdirectories)
+                        foreach (var file in files)
                         {
-                            try
+                            if (!file.Name.StartsWith(".") && !file.IsDirectory) // Skip hidden files and directories
                             {
-                                Console.WriteLine($"Listing files in subdirectory: {subdir}");
-                                var files = await Task.Run(() => client.ListDirectory($"./{subdir}"));
-                                
-                                foreach (var file in files)
-                                {
-                                    if (!file.Name.StartsWith(".")) // Skip hidden files
-                                    {
-                                        var filePath = $"{subdir}/{file.Name}";
-                                        fileNames.Add(filePath);
-                                        Console.WriteLine($"Found file: {filePath}");
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Error listing files in {subdir}: {ex.Message}");
-                                // Continue with other subdirectories
+                                var filePath = $"{_remotePath}/{file.Name}";
+                                fileNames.Add(filePath);
+                                Console.WriteLine($"Found file: {filePath}");
                             }
                         }
                         
@@ -305,13 +267,13 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     }
                     else
                     {
-                        throw new Exception("Failed to connect to SFTP server");
+                        throw new Exception("Failed to connect to AppCard SFTP server");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error listing files from SFTP: {ex.Message}");
+                Console.WriteLine($"Error listing files from AppCard SFTP: {ex.Message}");
                 throw;
             }
 
@@ -319,16 +281,15 @@ namespace DataStudioDataMgr.Services.ShopToCook
         }
 
         /// <summary>
-        /// Moves a file from a subdirectory to its Archive folder on SFTP server
+        /// Moves a file from the Incoming folder to the Archive folder on SFTP server
         /// </summary>
-        /// <param name="fileName">Name of the file to move (without subdirectory prefix)</param>
-        /// <param name="subdirectory">Subdirectory name (EmailData, KioskData, or WebsiteData)</param>
+        /// <param name="fileName">Name of the file to move</param>
         /// <returns>True if successful, false otherwise</returns>
-        public async Task<bool> MoveFileToArchiveAsync(string fileName, string subdirectory)
+        public async Task<bool> MoveFileToArchiveAsync(string fileName)
         {
             try
             {
-                Console.WriteLine($"Moving file to archive: {subdirectory}/{fileName}");
+                Console.WriteLine($"Moving file to archive: {fileName}");
                 
                 using (var client = new SftpClient(_host, _port, _username, _password))
                 {
@@ -336,41 +297,32 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     
                     if (client.IsConnected)
                     {
-                        string sourcePath = $"./{subdirectory}/{fileName}";
-                        string archivePath = $"./{subdirectory}/Archive/{fileName}";
+                        // Use the same path format as download: ./Incoming (download doesn't change directory)
+                        string sourcePath = $"./Incoming/{fileName}";
+                        string archivePath = $"./awg_appcard/Archive/{fileName}";
                         
                         Console.WriteLine($"Copying file from {sourcePath} to {archivePath}");
                         
-                        // Step 1: Copy file from subdirectory to Archive
+                        // Step 1: Copy file from Incoming to Archive
                         using (var sourceStream = new System.IO.MemoryStream())
                         {
                             await Task.Run(() => client.DownloadFile(sourcePath, sourceStream));
                             sourceStream.Position = 0;
                             
-                            // Ensure Archive directory exists
-                            try
-                            {
-                                await Task.Run(() => client.CreateDirectory($"./{subdirectory}/Archive"));
-                            }
-                            catch
-                            {
-                                // Directory might already exist, ignore error
-                            }
-                            
                             await Task.Run(() => client.UploadFile(sourceStream, archivePath));
-                            Console.WriteLine($"Successfully copied {fileName} to {subdirectory}/Archive folder");
+                            Console.WriteLine($"Successfully copied {fileName} to Archive folder");
                         }
                         
-                        // Step 2: Delete file from source (only if copy was successful)
+                        // Step 2: Delete file from Incoming (only if copy was successful)
                         await Task.Run(() => client.DeleteFile(sourcePath));
-                        Console.WriteLine($"Successfully deleted {fileName} from {subdirectory} folder");
+                        Console.WriteLine($"Successfully deleted {fileName} from Incoming folder");
                         
-                        Console.WriteLine($"Successfully moved {fileName} to {subdirectory}/Archive folder");
+                        Console.WriteLine($"Successfully moved {fileName} to Archive folder");
                         return true;
                     }
                     else
                     {
-                        throw new Exception("Failed to connect to SFTP server");
+                        throw new Exception("Failed to connect to AppCard SFTP server");
                     }
                 }
             }
@@ -387,22 +339,22 @@ namespace DataStudioDataMgr.Services.ShopToCook
         }
 
         /// <summary>
-        /// Moves multiple files to their respective Archive folders on SFTP server
+        /// Moves multiple files from the Incoming folder to the Archive folder on SFTP server
         /// </summary>
-        /// <param name="filesToArchive">Dictionary mapping file names to their subdirectories</param>
-        /// <returns>Number of files successfully archived</returns>
-        public async Task<int> MoveFilesToArchiveAsync(Dictionary<string, string> filesToArchive)
+        /// <param name="fileNames">List of file names to move</param>
+        /// <returns>Number of files successfully moved</returns>
+        public async Task<int> MoveFilesToArchiveAsync(List<string> fileNames)
         {
             int successCount = 0;
             
-            if (filesToArchive == null || filesToArchive.Count == 0)
+            if (fileNames == null || fileNames.Count == 0)
             {
                 return 0;
             }
             
             try
             {
-                Console.WriteLine($"Moving {filesToArchive.Count} file(s) to archive...");
+                Console.WriteLine($"Moving {fileNames.Count} file(s) to archive...");
                 
                 using (var client = new SftpClient(_host, _port, _username, _password))
                 {
@@ -410,43 +362,31 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     
                     if (client.IsConnected)
                     {
-                        foreach (var kvp in filesToArchive)
+                        // Use the same path format as download: ./Incoming (download doesn't change directory)
+                        foreach (var fileName in fileNames)
                         {
-                            var fileName = kvp.Key;
-                            var subdirectory = kvp.Value;
-                            
                             try
                             {
-                                string sourcePath = $"./{subdirectory}/{fileName}";
-                                string archivePath = $"./{subdirectory}/Archive/{fileName}";
+                                string sourcePath = $"./Incoming/{fileName}";
+                                string archivePath = $"./Archive/{fileName}";
                                 
                                 Console.WriteLine($"Copying file from {sourcePath} to {archivePath}");
                                 
-                                // Step 1: Copy file from subdirectory to Archive
+                                // Step 1: Copy file from Incoming to Archive
                                 using (var sourceStream = new System.IO.MemoryStream())
                                 {
                                     await Task.Run(() => client.DownloadFile(sourcePath, sourceStream));
                                     sourceStream.Position = 0;
                                     
-                                    // Ensure Archive directory exists
-                                    try
-                                    {
-                                        await Task.Run(() => client.CreateDirectory($"./{subdirectory}/Archive"));
-                                    }
-                                    catch
-                                    {
-                                        // Directory might already exist, ignore error
-                                    }
-                                    
                                     await Task.Run(() => client.UploadFile(sourceStream, archivePath));
-                                    Console.WriteLine($"Successfully copied {fileName} to {subdirectory}/Archive folder");
+                                    Console.WriteLine($"Successfully copied {fileName} to Archive folder");
                                 }
                                 
-                                // Step 2: Delete file from source (only if copy was successful)
+                                // Step 2: Delete file from Incoming (only if copy was successful)
                                 await Task.Run(() => client.DeleteFile(sourcePath));
-                                Console.WriteLine($"Successfully deleted {fileName} from {subdirectory} folder");
+                                Console.WriteLine($"Successfully deleted {fileName} from Incoming folder");
                                 
-                                Console.WriteLine($"Successfully moved {fileName} to {subdirectory}/Archive folder");
+                                Console.WriteLine($"Successfully moved {fileName} to Archive folder");
                                 successCount++;
                             }
                             catch (Exception ex)
@@ -462,7 +402,7 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     }
                     else
                     {
-                        throw new Exception("Failed to connect to SFTP server");
+                        throw new Exception("Failed to connect to AppCard SFTP server");
                     }
                 }
             }
@@ -475,3 +415,4 @@ namespace DataStudioDataMgr.Services.ShopToCook
         }
     }
 }
+

@@ -27,6 +27,10 @@
         <add key="RunBrickCampaignData" value="false" />
         <add key="RunBrickDailyStatistics" value="true" />
         <add key="TestBrickConnection" value="false" />
+        <add key="RunGiveXEmailData" value="false" />
+        <add key="RunGiveXLoyaltyData" value="false" />
+        <add key="RunGiveXCouponData" value="false" />
+        <add key="RunBrDataPOSData" value="false" />
         
         <!-- ShopToCook SFTP Configuration -->
         <add key="ShopToCookSftpHost" value="sftp.ecomsystems.com" />
@@ -35,6 +39,41 @@
                 <add key="ShopToCookSftpPassword" value="%SHOPTOCOOK_SFTP_PASSWORD%" />
         <add key="ShopToCookLocalPath" value="downloads" />
         <add key="ShopToCookCleanupFiles" value="false" />
+        
+        <!-- GiveX Configuration -->
+        <add key="RunGiveXEmail" value="false" />
+        <add key="GiveXCertcoNetworkPath" value="\\vm-fileserver\FTP\Certco\GiveX\Coupon_Data\" />
+        <add key="GiveXAwgNetworkPath" value="\\vm-fileserver\FTP\AWG\GiveX\Coupon_Data\" />
+        <add key="GiveXLocalPath" value="downloads\givex" />
+        <add key="GiveXCleanupFiles" value="false" />
+        <add key="GiveXCertcoEmailArchivePath" value="\\vm-fileserver\FTP\Certco\GiveX\Email_Data\Archive\" />
+        <add key="GiveXAwgEmailArchivePath" value="\\vm-fileserver\FTP\AWG\GiveX\Email_Data\Archive\" />
+        <add key="GiveXCertcoLoyaltyArchivePath" value="\\vm-fileserver\FTP\Certco\GiveX\Loyalty_Data\Archive\" />
+        <add key="GiveXCertcoCouponArchivePath" value="\\vm-fileserver\FTP\Certco\GiveX\Coupon_Data\Archive\" />
+        <!-- Certco FTP Credentials -->
+        <add key="GiveXCertcoFtpHost" value="ftp://ftp.ampm1.com" />
+        <add key="GiveXCertcoFtpUsername" value="givex_01" />
+        <add key="GiveXCertcoFtpPassword" value="GX#718_)" />
+        <!-- AWG FTP Credentials -->
+        <add key="GiveXAwgFtpHost" value="ftp://ftp.ampm1.com" />
+        <add key="GiveXAwgFtpUsername" value="givex_02" />
+        <add key="GiveXAwgFtpPassword" value="5MHts7Dj)" />
+        
+        <!-- AppCard SFTP Configuration -->
+        <add key="RunAppCardData" value="false" />
+        <add key="AppCardSftpHost" value="%APPCARD_SFTP_HOST%" />
+        <add key="AppCardSftpPort" value="22" />
+        <add key="AppCardSftpUsername" value="awgAppCard" />
+        <add key="AppCardSftpPassword" value="%APPCARD_SFTP_PASSWORD%" />
+        <add key="AppCardSftpRemotePath" value="awg_appcard/Incoming" />
+        <add key="AppCardLocalPath" value="downloads\appcard" />
+        <add key="AppCardCleanupFiles" value="false" />
+        
+        <!-- BrData Configuration -->
+        <add key="BrDataSourceNetworkPath" value="\\vm-fileserver\FTP\Certco\BRdata\IncomingPOS\" />
+        <add key="BrDataArchivePath" value="\\vm-fileserver\FTP\Certco\BRdata\IncomingPOS\Archive\" />
+        <add key="BrDataLocalPath" value="downloads\brdata" />
+        <add key="BrDataCleanupFiles" value="false" />
         
         <!-- Brick API Configuration -->
         <add key="BrickBaseUrl" value="https://serve.withbrick.com" />

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.IO;
@@ -36,8 +37,8 @@ namespace DataStudioDataMgr.Services.Coupon
         /// Fetches coupon redemption report data from the Coupon API
         /// </summary>
         /// <param name="statuses">Array of status strings to filter by</param>
-        /// <param name="startDate">Start date for filtering (YYYY-MM-DD format)</param>
-        /// <param name="endDate">End date for filtering (YYYY-MM-DD format)</param>
+        /// <param name="startDate">Start date for filtering (ISO 8601 format)</param>
+        /// <param name="endDate">End date for filtering (ISO 8601 format)</param>
         /// <returns>API response containing coupon redemption data</returns>
         public async Task<CouponApi.RootObject> GetCouponRedemptionReportAsync(
             string[] statuses = null,
@@ -53,15 +54,44 @@ namespace DataStudioDataMgr.Services.Coupon
                 request.Headers.Add("Authorization", _authorizationHeader);
                 request.Headers.Add("Cookie", _cookieHeader);
 
-                // Create JSON body
-                var requestBody = new
-                {
-                    statuses = statuses ?? new[] { "string" },
-                    startDate = startDate ?? DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd"),
-                    endDate = endDate ?? DateTime.Now.ToString("yyyy-MM-dd")
-                };
+                // Format dates using ISO 8601 format ("O")
+                // If dates are not provided, use current date as default
+                DateTime currentDate = DateTime.Now;
+                DateTime startDateValue = currentDate.Date;
+                DateTime endDateValue = currentDate.Date.AddDays(1).AddTicks(-1);
 
-                var jsonBody = JsonConvert.SerializeObject(requestBody);
+                // Parse provided dates if they exist
+                if (!string.IsNullOrEmpty(startDate))
+                {
+                    if (DateTime.TryParse(startDate, out DateTime parsedStartDate))
+                    {
+                        startDateValue = parsedStartDate.Date;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(endDate))
+                {
+                    if (DateTime.TryParse(endDate, out DateTime parsedEndDate))
+                    {
+                        endDateValue = parsedEndDate.Date.AddDays(1).AddTicks(-1);
+                    }
+                }
+
+                // Format dates as ISO 8601 strings
+                var startDateString = startDateValue.ToString("O");
+                var endDateString = endDateValue.ToString("O");
+
+                // Use provided statuses or default to ["string"]
+                var statusesArray = statuses ?? new[] { "string" };
+                var statusesJson = string.Join(",", statusesArray.Select(s => $"\"{s}\""));
+
+                // Create properly formatted JSON body
+                var jsonBody = $@"{{
+        ""statuses"": [{statusesJson}],
+        ""startDate"": ""{startDateString}"",
+        ""endDate"": ""{endDateString}""
+      }}";
+
                 request.Content = new StringContent(jsonBody, Encoding.UTF8, "text/json");
 
                 Console.WriteLine($"Making Coupon API request to: {_baseUrl}");
@@ -69,23 +99,22 @@ namespace DataStudioDataMgr.Services.Coupon
 
                 // Make the API call
                 var response = await _httpClient.SendAsync(request);
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    throw new HttpRequestException($"Coupon API request failed with status {response.StatusCode}: {errorContent}");
-                }
+                response.EnsureSuccessStatusCode();
 
-                var jsonContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Coupon API Response received: {jsonContent.Length} characters");
+                string responseBody = await response.Content.ReadAsStringAsync();
 
-                // Deserialize the response
-                var result = JsonConvert.DeserializeObject<CouponApi.RootObject>(jsonContent);
-                
+                var result = Newtonsoft.Json.JsonConvert.DeserializeObject<CouponApi.RootObject>(responseBody);
+
                 if (result == null)
                 {
                     throw new InvalidOperationException("Failed to deserialize coupon API response");
                 }
+
+                Console.WriteLine($"Coupon API Response received: {responseBody.Length} characters");
+                Console.WriteLine($"Result: {result.result}");
+                Console.WriteLine($"Message: {result.message}");
+                Console.WriteLine($"Timestamp: {result.timestamp}");
+                Console.WriteLine($"Number of coupons: {result.data?.Count ?? 0}");
 
                 return result;
             }
@@ -127,13 +156,16 @@ namespace DataStudioDataMgr.Services.Coupon
         /// <param name="days">Number of days to look back</param>
         /// <param name="statuses">Array of status strings to filter by</param>
         /// <returns>API response containing coupon redemption data</returns>
-        public async Task<CouponApi.RootObject> GetCouponRedemptionReportForLastDaysAsync(
-            int days = 30,
+        public async Task<CouponApi.RootObject> GetCouponRedemptionReportForLastDaysAsync( DateTime startDt, DateTime endDt,
+            int days = 1,
             string[] statuses = null)
         {
-            var endDate = DateTime.Now.ToString("yyyy-MM-dd");
-            var startDate = DateTime.Now.AddDays(-days).ToString("yyyy-MM-dd");
-            
+            //var endDate = endDt.ToString("yyyy-MM-dd");
+            //var startDate = startDt.ToString("yyyy-MM-dd");
+
+            var endDate = endDt.ToString("O");
+            var startDate = startDt.ToString("O");
+
             return await GetCouponRedemptionReportAsync(statuses, startDate, endDate);
         }
 

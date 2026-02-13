@@ -12,6 +12,24 @@ using DataStudioDataMgr.Models;
 namespace DataStudioDataMgr.Services.ShopToCook
 {
     /// <summary>
+    /// Custom type converter for integers that handles comma-separated numbers
+    /// </summary>
+    public class IntegerConverterWithCommas : Int32Converter
+    {
+        public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+        {
+            // Remove commas from the text before conversion
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                text = text.Replace(",", "");
+            }
+
+            // Use base converter for the cleaned value
+            return base.ConvertFromString(text, row, memberMapData);
+        }
+    }
+
+    /// <summary>
     /// CSV mapping configurations for ShopToCook data
     /// </summary>
     public class ShopToCookEmailMap : ClassMap<ShopToCookEmail>
@@ -20,8 +38,9 @@ namespace DataStudioDataMgr.Services.ShopToCook
         {
             Map(m => m.Email).Name("Email");
             Map(m => m.Date).Name("Date");
-            Map(m => m.Sent).Name("Sent");
-            Map(m => m.Opened).Name("Opened");
+            // Use custom converter for Sent and Opened to handle comma-separated numbers
+            Map(m => m.Sent).Name("Sent").TypeConverter<IntegerConverterWithCommas>();
+            Map(m => m.Opened).Name("Opened").TypeConverter<IntegerConverterWithCommas>();
             // SourceFileName is set programmatically, not from CSV
             Map(m => m.SourceFileName).Ignore();
         }

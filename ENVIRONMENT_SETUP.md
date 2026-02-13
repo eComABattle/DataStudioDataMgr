@@ -5,6 +5,7 @@ This application uses environment variables to securely store sensitive configur
 ## Required Environment Variables
 
 ### MongoDB Configuration
+
 ```bash
 MONGODB_USERNAME=your_mongodb_username
 MONGODB_PASSWORD=your_mongodb_password
@@ -15,16 +16,26 @@ MONGODB_TEST_DATABASE_NAME=integration_test
 ```
 
 ### ShopToCook SFTP Configuration
+
 ```bash
 SHOPTOCOOK_SFTP_PASSWORD=your_sftp_password
 ```
 
+### AppCard SFTP Configuration
+
+```bash
+APPCARD_SFTP_HOST=us-east-1.sftpcloud.io
+APPCARD_SFTP_PASSWORD=your_appcard_sftp_password
+```
+
 ### Emfluence API Configuration
+
 ```bash
 EMFLUENCE_ACCESS_TOKEN=your_emfluence_access_token
 ```
 
 ### Emfluence Store Configuration
+
 ```bash
 STORE_1_ACCESS_TOKEN=your_store_1_access_token
 STORE_2_ACCESS_TOKEN=your_store_2_access_token
@@ -38,6 +49,7 @@ STORE_9_ACCESS_TOKEN=your_store_9_access_token
 ```
 
 ### Brick API Configuration
+
 ```bash
 BRICK_PASSWORD=your_brick_password
 ```
@@ -45,6 +57,7 @@ BRICK_PASSWORD=your_brick_password
 ## Setting Environment Variables
 
 ### Windows (Command Prompt)
+
 ```cmd
 set MONGODB_USERNAME=admin
 set MONGODB_PASSWORD=your_password
@@ -53,6 +66,8 @@ set MONGODB_DATABASE=integration
 set MONGODB_DATABASE_NAME=integration
 set MONGODB_TEST_DATABASE_NAME=integration_test
 set SHOPTOCOOK_SFTP_PASSWORD=your_sftp_password
+set APPCARD_SFTP_HOST=us-east-1.sftpcloud.io
+set APPCARD_SFTP_PASSWORD=your_appcard_sftp_password
 set EMFLUENCE_ACCESS_TOKEN=your_emfluence_access_token
 set STORE_1_ACCESS_TOKEN=your_store_1_access_token
 set STORE_2_ACCESS_TOKEN=your_store_2_access_token
@@ -67,6 +82,7 @@ set BRICK_PASSWORD=your_brick_password
 ```
 
 ### Windows (PowerShell)
+
 ```powershell
 $env:MONGODB_USERNAME="admin"
 $env:MONGODB_PASSWORD="your_password"
@@ -75,6 +91,8 @@ $env:MONGODB_DATABASE="integration"
 $env:MONGODB_DATABASE_NAME="integration"
 $env:MONGODB_TEST_DATABASE_NAME="integration_test"
 $env:SHOPTOCOOK_SFTP_PASSWORD="your_sftp_password"
+$env:APPCARD_SFTP_HOST="us-east-1.sftpcloud.io"
+$env:APPCARD_SFTP_PASSWORD="your_appcard_sftp_password"
 $env:EMFLUENCE_ACCESS_TOKEN="your_emfluence_access_token"
 $env:STORE_1_ACCESS_TOKEN="your_store_1_access_token"
 $env:STORE_2_ACCESS_TOKEN="your_store_2_access_token"
@@ -89,11 +107,13 @@ $env:BRICK_PASSWORD="your_brick_password"
 ```
 
 ### Windows (System Environment Variables)
+
 1. Open System Properties → Advanced → Environment Variables
 2. Add the variables under "User variables" or "System variables"
 3. Restart your IDE/command prompt
 
 ### Linux/macOS
+
 ```bash
 export MONGODB_USERNAME=admin
 export MONGODB_PASSWORD=your_password
@@ -102,6 +122,8 @@ export MONGODB_DATABASE=integration
 export MONGODB_DATABASE_NAME=integration
 export MONGODB_TEST_DATABASE_NAME=integration_test
 export SHOPTOCOOK_SFTP_PASSWORD=your_sftp_password
+export APPCARD_SFTP_HOST=us-east-1.sftpcloud.io
+export APPCARD_SFTP_PASSWORD=your_appcard_sftp_password
 export EMFLUENCE_ACCESS_TOKEN=your_emfluence_access_token
 export STORE_1_ACCESS_TOKEN=your_store_1_access_token
 export STORE_2_ACCESS_TOKEN=your_store_2_access_token

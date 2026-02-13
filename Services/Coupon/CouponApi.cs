@@ -13,6 +13,7 @@ namespace DataStudioDataMgr.Services.Coupon
             public List<Coupon> data { get; set; } // Represents the array of coupon objects
             public DateTime timestamp { get; set; }
             public int apiCode { get; set; }
+            public object Length { get; internal set; }
         }
 
         public class Coupon

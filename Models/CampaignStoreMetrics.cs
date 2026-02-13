@@ -12,7 +12,10 @@ namespace DataStudioDataMgr.Models
         public string MetricTypeId { get; set; }
         public string PostID { get; set; }
         public string PostName { get; set; }
+        public string MetaData { get; set; }
+        public string Url { get; set; }
         public string PostScheduledDate { get; set; }
+        public string PostPublishedDate { get; set; }
         public string MetricDate { get; set; }
         public string ClientToken { get; set; }
         public string Store { get; set; }

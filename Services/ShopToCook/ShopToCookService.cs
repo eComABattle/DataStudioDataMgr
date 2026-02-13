@@ -85,6 +85,9 @@ namespace DataStudioDataMgr.Services.ShopToCook
                 int totalEmailRecords = 0;
                 int totalWebRecords = 0;
                 int totalKioskRecords = 0;
+                
+                // Track successfully processed files for archiving (fileName -> subdirectory)
+                var filesToArchive = new Dictionary<string, string>();
 
                 try
                 {
@@ -94,6 +97,21 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     var emailStoredCount = await _mongoService.StoreEmailDataAsync(emailData, "AWG");
                     totalEmailRecords += emailStoredCount;
                     Console.WriteLine($"Processed {emailData.Count} email records, stored {emailStoredCount}");
+                    
+                    // Track successfully processed email files for archiving
+                    if (emailStoredCount > 0 && emailData.Count > 0)
+                    {
+                        var emailFiles = Directory.GetFiles(downloadDirectory, "EmailData_*.csv");
+                        foreach (var localFile in emailFiles)
+                        {
+                            var localFileName = Path.GetFileName(localFile);
+                            // Extract original filename by removing "EmailData_" prefix
+                            var originalFileName = localFileName.StartsWith("EmailData_") 
+                                ? localFileName.Substring("EmailData_".Length) 
+                                : localFileName;
+                            filesToArchive[originalFileName] = "EmailData";
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -108,6 +126,21 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     var webStoredCount = await _mongoService.StoreWebDataAsync(webData, "AWG");
                     totalWebRecords += webStoredCount;
                     Console.WriteLine($"Processed {webData.Count} web records, stored {webStoredCount}");
+                    
+                    // Track successfully processed web files for archiving
+                    if (webStoredCount > 0 && webData.Count > 0)
+                    {
+                        var webFiles = Directory.GetFiles(downloadDirectory, "WebsiteData_*.csv");
+                        foreach (var localFile in webFiles)
+                        {
+                            var localFileName = Path.GetFileName(localFile);
+                            // Extract original filename by removing "WebsiteData_" prefix
+                            var originalFileName = localFileName.StartsWith("WebsiteData_") 
+                                ? localFileName.Substring("WebsiteData_".Length) 
+                                : localFileName;
+                            filesToArchive[originalFileName] = "WebsiteData";
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -122,6 +155,21 @@ namespace DataStudioDataMgr.Services.ShopToCook
                     var kioskStoredCount = await _mongoService.StoreKioskDataAsync(kioskData, "AWG");
                     totalKioskRecords += kioskStoredCount;
                     Console.WriteLine($"Processed {kioskData.Count} kiosk records, stored {kioskStoredCount}");
+                    
+                    // Track successfully processed kiosk files for archiving
+                    if (kioskStoredCount > 0 && kioskData.Count > 0)
+                    {
+                        var kioskFiles = Directory.GetFiles(downloadDirectory, "KioskData_*.csv");
+                        foreach (var localFile in kioskFiles)
+                        {
+                            var localFileName = Path.GetFileName(localFile);
+                            // Extract original filename by removing "KioskData_" prefix
+                            var originalFileName = localFileName.StartsWith("KioskData_") 
+                                ? localFileName.Substring("KioskData_".Length) 
+                                : localFileName;
+                            filesToArchive[originalFileName] = "KioskData";
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -135,6 +183,21 @@ namespace DataStudioDataMgr.Services.ShopToCook
                 // Step 6: Get final counts
                 Console.WriteLine("Step 6: Getting collection counts...");
                 var counts = await _mongoService.GetCollectionCountsAsync();
+
+                // Step 7: Archive successfully processed files
+                if (filesToArchive.Count > 0)
+                {
+                    Console.WriteLine("Step 7: Archiving successfully processed CSV files...");
+                    try
+                    {
+                        var archivedCount = await _sftpService.MoveFilesToArchiveAsync(filesToArchive);
+                        Console.WriteLine($"Archived {archivedCount} of {filesToArchive.Count} file(s)");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error archiving files: {ex.Message}");
+                    }
+                }
 
                 // Summary
                 Console.WriteLine("=== SHOPTOCOOK DATA PROCESSING COMPLETE ===");
@@ -209,21 +272,42 @@ namespace DataStudioDataMgr.Services.ShopToCook
 
                 int storedCount = 0;
                 
+                string subdirectory = null;
+                string originalFileName = null;
+                
                 switch (fileType.ToLower())
                 {
                     case "email":
                         var emailData = await _csvService.ProcessEmailCsvAsync(filePath);
                         storedCount = await _mongoService.StoreEmailDataAsync(emailData, "AWG");
+                        subdirectory = "EmailData";
+                        // Extract original filename from local file path
+                        var localEmailFileName = Path.GetFileName(filePath);
+                        originalFileName = localEmailFileName.StartsWith("EmailData_") 
+                            ? localEmailFileName.Substring("EmailData_".Length) 
+                            : localEmailFileName;
                         break;
                         
                     case "web":
                         var webData = await _csvService.ProcessWebCsvAsync(filePath);
                         storedCount = await _mongoService.StoreWebDataAsync(webData, "AWG");
+                        subdirectory = "WebsiteData";
+                        // Extract original filename from local file path
+                        var localWebFileName = Path.GetFileName(filePath);
+                        originalFileName = localWebFileName.StartsWith("WebsiteData_") 
+                            ? localWebFileName.Substring("WebsiteData_".Length) 
+                            : localWebFileName;
                         break;
                         
                     case "kiosk":
                         var kioskData = await _csvService.ProcessKioskCsvAsync(filePath);
                         storedCount = await _mongoService.StoreKioskDataAsync(kioskData, "AWG");
+                        subdirectory = "KioskData";
+                        // Extract original filename from local file path
+                        var localKioskFileName = Path.GetFileName(filePath);
+                        originalFileName = localKioskFileName.StartsWith("KioskData_") 
+                            ? localKioskFileName.Substring("KioskData_".Length) 
+                            : localKioskFileName;
                         break;
                         
                     default:
@@ -232,6 +316,21 @@ namespace DataStudioDataMgr.Services.ShopToCook
                 }
 
                 Console.WriteLine($"Successfully processed {storedCount} {fileType} records");
+
+                // Archive file if successfully stored
+                if (storedCount > 0 && !string.IsNullOrEmpty(originalFileName) && !string.IsNullOrEmpty(subdirectory))
+                {
+                    Console.WriteLine($"Archiving file: {originalFileName}...");
+                    var archived = await _sftpService.MoveFileToArchiveAsync(originalFileName, subdirectory);
+                    if (archived)
+                    {
+                        Console.WriteLine($"Successfully archived {originalFileName}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Warning: Failed to archive {originalFileName}");
+                    }
+                }
             }
             catch (Exception ex)
             {

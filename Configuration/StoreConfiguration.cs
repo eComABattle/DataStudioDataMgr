@@ -25,6 +25,24 @@ namespace DataStudioDataMgr.Configuration
     public static class StoreConfigurationManager
     {
         /// <summary>
+        /// Calculates the DateSentStart as 17 months prior to the current month
+        /// Business rule: 17 months prior to current month (endpoint allows up to 18 month date range)
+        /// </summary>
+        /// <returns>Date string in YYYY-MM-DD format for the first day of the month 17 months prior</returns>
+        private static string CalculateDateSentStart()
+        {
+            // Get current date and calculate 17 months prior
+            DateTime currentDate = DateTime.Now;
+            DateTime dateSentStart = currentDate.AddMonths(-17);
+            
+            // Get the first day of that month
+            DateTime firstDayOfMonth = new DateTime(dateSentStart.Year, dateSentStart.Month, 1);
+            
+            // Format as YYYY-MM-DD
+            return firstDayOfMonth.ToString("yyyy-MM-dd");
+        }
+
+        /// <summary>
         /// Loads all store configurations from App.config
         /// </summary>
         /// <returns>List of store configurations</returns>
@@ -33,6 +51,10 @@ namespace DataStudioDataMgr.Configuration
             var stores = new List<StoreConfiguration>();
             
             Console.WriteLine("=== DEBUG: Loading Store Configurations ===");
+            
+            // Calculate DateSentStart dynamically (17 months prior to current month)
+            string defaultDateSentStart = CalculateDateSentStart();
+            Console.WriteLine($"DEBUG: Calculated DateSentStart (17 months prior): {defaultDateSentStart}");
             
             // Load the original single store configuration for backward compatibility
             var originalToken = ConfigurationManager.AppSettings["EmfluenceAccessToken"];
@@ -51,13 +73,13 @@ namespace DataStudioDataMgr.Configuration
                     AccessToken = originalToken,
                     DeliveryType = ConfigurationManager.AppSettings["EmfluenceDeliveryType"] ?? "manual",
                     Status = ConfigurationManager.AppSettings["EmfluenceStatus"] ?? "sent",
-                    DateSentStart = ConfigurationManager.AppSettings["EmfluenceDateSentStart"] ?? "2025-01-01",
+                    DateSentStart = ConfigurationManager.AppSettings["EmfluenceDateSentStart"] ?? defaultDateSentStart,
                     MaxRecords = int.Parse(ConfigurationManager.AppSettings["EmfluenceMaxRecords"] ?? "10000"),
                     Enabled = bool.Parse(ConfigurationManager.AppSettings["RunEmfluenceApi"] ?? "true")
                 };
                 
                 stores.Add(defaultStore);
-                Console.WriteLine($"DEBUG: Added default store - ID: {defaultStore.StoreId}, Name: {defaultStore.StoreName}, Enabled: {defaultStore.Enabled}");
+                Console.WriteLine($"DEBUG: Added default store - ID: {defaultStore.StoreId}, Name: {defaultStore.StoreName}, DateSentStart: {defaultStore.DateSentStart}, Enabled: {defaultStore.Enabled}");
             }
 
             // Load additional store configurations
@@ -80,13 +102,13 @@ namespace DataStudioDataMgr.Configuration
                         AccessToken = accessToken,
                         DeliveryType = ConfigurationManager.AppSettings[$"Store_{i}_DeliveryType"] ?? "manual",
                         Status = ConfigurationManager.AppSettings[$"Store_{i}_Status"] ?? "sent",
-                        DateSentStart = ConfigurationManager.AppSettings[$"Store_{i}_DateSentStart"] ?? "2025-01-01",
+                        DateSentStart = ConfigurationManager.AppSettings[$"Store_{i}_DateSentStart"] ?? defaultDateSentStart,
                         MaxRecords = int.Parse(ConfigurationManager.AppSettings[$"Store_{i}_MaxRecords"] ?? "10000"),
                         Enabled = bool.Parse(ConfigurationManager.AppSettings[$"Store_{i}_Enabled"] ?? "true")
                     };
                     
                     stores.Add(store);
-                    Console.WriteLine($"DEBUG: Added Store_{i} - ID: {store.StoreId}, Name: {store.StoreName}, Enabled: {store.Enabled}");
+                    Console.WriteLine($"DEBUG: Added Store_{i} - ID: {store.StoreId}, Name: {store.StoreName}, DateSentStart: {store.DateSentStart}, Enabled: {store.Enabled}");
                 }
             }
 

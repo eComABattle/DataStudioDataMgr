@@ -24,8 +24,15 @@ namespace DataStudioDataMgr.Services.Brick
         }
 
         /// <summary>
-        /// Processes Brick campaign data by fetching campaign list from API and storing in MongoDB
-        /// Then iterates over each campaign to fetch and store daily statistics
+        /// Processes Brick campaign data by fetching campaign list from API and storing in MongoDB.
+        /// Then processes daily statistics for each campaign using dates from the campaign data.
+        /// 
+        /// Current approach:
+        /// 1. Fetches campaign data from Brick Campaign endpoint
+        /// 2. Stores campaigns in MongoDB
+        /// 3. For each campaign, fetches daily statistics using campaignId, startDate, and endDate from the campaign data
+        /// 4. Adjusts endDate by adding BrickDailyStatisticsEndDateAddDays configuration value
+        /// 5. Stores daily statistics in MongoDB only if adjustedEndDate >= currentDateTime
         /// </summary>
         public async Task ProcessBrickCampaignDataAsync()
         {
@@ -75,7 +82,11 @@ namespace DataStudioDataMgr.Services.Brick
 
         /// <summary>
         /// Processes Brick daily statistics by fetching campaign daily statistics from API and storing in MongoDB
+        /// DEPRECATED: This method uses configuration values for dates. 
+        /// The current use case requires dates to come from the Brick Campaign endpoint.
+        /// Use ProcessBrickCampaignDataAsync instead, which automatically processes daily statistics for all campaigns.
         /// </summary>
+        [Obsolete("This method uses configuration values for dates. Use ProcessBrickCampaignDataAsync instead, which gets dates from the Brick Campaign endpoint.")]
         public async Task ProcessBrickDailyStatisticsAsync()
         {
             try
@@ -151,15 +162,27 @@ namespace DataStudioDataMgr.Services.Brick
                 // Get the number of days to add to endDate from configuration (default: 7)
                 int endDateAddDays = int.Parse(ConfigurationManager.AppSettings["BrickDailyStatisticsEndDateAddDays"] ?? "7");
                 DateTime adjustedEndDate = endDate.AddDays(endDateAddDays);
-                
-                Console.WriteLine($"Original end date: {endDateStr}, Adjusted end date (with {endDateAddDays} days): {adjustedEndDate:yyyy-MM-dd}");
+                DateTime currentDateTime = DateTime.UtcNow;
 
-                // Step 2: Store daily statistics in MongoDB
-                Console.WriteLine("Step 2: Storing daily statistics in MongoDB...");
-                int recordsStored = await _mongoService.StoreCampaignDailyStatisticsFromJsonAsync(jsonResponse, campaignId, campaignName, startDate, adjustedEndDate);
-                
-                Console.WriteLine($"=== BRICK DAILY STATISTICS PROCESSING COMPLETE ===");
-                Console.WriteLine($"Successfully processed and stored {recordsStored} daily statistics records");
+                Console.WriteLine($"Original end date: {endDateStr}, Adjusted end date (with {endDateAddDays} days): {adjustedEndDate:yyyy-MM-dd}");
+                Console.WriteLine($"Current date time: {currentDateTime:yyyy-MM-dd HH:mm:ss} UTC");
+
+                // Only store daily statistics if adjustedEndDate is greater than or equal to currentDateTime
+                if (adjustedEndDate >= currentDateTime)
+                {
+                    // Step 2: Store daily statistics in MongoDB
+                    Console.WriteLine("Step 2: Storing daily statistics in MongoDB...");
+                    int recordsStored = await _mongoService.StoreCampaignDailyStatisticsFromJsonAsync(jsonResponse, campaignId, campaignName, startDate, adjustedEndDate);
+                    
+                    Console.WriteLine($"=== BRICK DAILY STATISTICS PROCESSING COMPLETE ===");
+                    Console.WriteLine($"Successfully processed and stored {recordsStored} daily statistics records");
+                }
+                else
+                {
+                    Console.WriteLine($"Skipping storage: Adjusted end date ({adjustedEndDate:yyyy-MM-dd}) is before current date time ({currentDateTime:yyyy-MM-dd HH:mm:ss} UTC)");
+                    Console.WriteLine($"=== BRICK DAILY STATISTICS PROCESSING COMPLETE ===");
+                    Console.WriteLine("No records stored - adjusted end date is in the past");
+                }
             }
             catch (Exception ex)
             {
@@ -174,7 +197,10 @@ namespace DataStudioDataMgr.Services.Brick
         }
 
         /// <summary>
-        /// Processes daily statistics for all campaigns from MongoDB
+        /// Processes daily statistics for all campaigns from MongoDB.
+        /// Gets campaignId, startDate, and endDate from each campaign document in MongoDB,
+        /// then calls ProcessBrickDailyStatisticsForCampaignAsync for each campaign.
+        /// This is the primary approach - dates come from the Brick Campaign endpoint response.
         /// </summary>
         private async Task ProcessDailyStatisticsForAllCampaignsFromMongoAsync()
         {
@@ -234,18 +260,33 @@ namespace DataStudioDataMgr.Services.Brick
                             continue;
                         }
 
+                        // Adjust endDate by adding BrickDailyStatisticsEndDateAddDays configuration value
+                        int endDateAddDays = int.Parse(ConfigurationManager.AppSettings["BrickDailyStatisticsEndDateAddDays"] ?? "7");
+                        DateTime adjustedEndDate = endDate.Value.AddDays(endDateAddDays);
+
                         Console.WriteLine($"Processing daily statistics for campaign ID {campaignId} ({campaignName})");
                         Console.WriteLine($"  Date range: {startDate.Value:yyyy-MM-dd} to {endDate.Value:yyyy-MM-dd}");
+                        Console.WriteLine($"  Adjusted end date (with {endDateAddDays} days): {adjustedEndDate:yyyy-MM-dd}");
 
-                        // Process daily statistics for this campaign using values from MongoDB
-                        await ProcessBrickDailyStatisticsForCampaignAsync(
-                            campaignId.Value,
-                            startDate.Value,
-                            endDate.Value,
-                            campaignName
-                        );
+                        // Check if adjustedEndDate is greater than or equal to current date
+                        DateTime currentDateTime = DateTime.UtcNow;
+                        if (adjustedEndDate >= currentDateTime)
+                        {
+                            // Process daily statistics for this campaign using values from MongoDB
+                            await ProcessBrickDailyStatisticsForCampaignAsync(
+                                campaignId.Value,
+                                startDate.Value,
+                                adjustedEndDate,
+                                campaignName
+                            );
 
-                        processedCount++;
+                            processedCount++;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"  Skipping campaign ID {campaignId}: Adjusted end date ({adjustedEndDate:yyyy-MM-dd}) is before current date time ({currentDateTime:yyyy-MM-dd HH:mm:ss} UTC)");
+                            skippedCount++;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -269,9 +310,12 @@ namespace DataStudioDataMgr.Services.Brick
         }
 
         /// <summary>
-        /// Processes daily statistics for all campaigns in the JSON response (legacy method - kept for backward compatibility)
+        /// Processes daily statistics for all campaigns in the JSON response (legacy method - no longer used)
+        /// DEPRECATED: This method is no longer used. The current approach uses ProcessDailyStatisticsForAllCampaignsFromMongoAsync
+        /// which gets campaigns from MongoDB instead of parsing JSON directly.
         /// </summary>
         /// <param name="jsonResponse">JSON response string from Brick API containing campaign list</param>
+        [Obsolete("This method is no longer used. Use ProcessDailyStatisticsForAllCampaignsFromMongoAsync instead.")]
         private async Task ProcessDailyStatisticsForAllCampaignsAsync(string jsonResponse)
         {
             try
@@ -402,15 +446,20 @@ namespace DataStudioDataMgr.Services.Brick
                                 continue;
                             }
 
+                            // Adjust endDate by adding BrickDailyStatisticsEndDateAddDays configuration value
+                            int endDateAddDays = int.Parse(ConfigurationManager.AppSettings["BrickDailyStatisticsEndDateAddDays"] ?? "7");
+                            DateTime adjustedEndDate = endDate.Value.AddDays(endDateAddDays);
+
                             Console.WriteLine($"Processing daily statistics for campaign ID {campaignId} ({campaignName})");
                             Console.WriteLine($"  Date range: {startDate.Value:yyyy-MM-dd} to {endDate.Value:yyyy-MM-dd}");
+                            Console.WriteLine($"  Adjusted end date (with {endDateAddDays} days): {adjustedEndDate:yyyy-MM-dd}");
 
                             // Process daily statistics for this campaign using values from BrickCampaignData response
                             // This is the primary approach - campaignId, startDate, and endDate come from the campaign data
                             await ProcessBrickDailyStatisticsForCampaignAsync(
                                 campaignId.Value,
                                 startDate.Value,
-                                endDate.Value,
+                                adjustedEndDate,
                                 campaignName
                             );
 
@@ -439,41 +488,41 @@ namespace DataStudioDataMgr.Services.Brick
         }
 
         /// <summary>
-        /// Processes Brick daily statistics for a single campaign
-        /// Uses campaignId, startDate, and endDate from the BrickCampaignData endpoint response (primary approach)
+        /// Processes Brick daily statistics for a single campaign.
+        /// This is the primary method used for processing daily statistics.
+        /// 
+        /// Process:
+        /// 1. Uses campaignId, startDate, and endDate from the Brick Campaign endpoint response
+        /// 2. Calls Brick Daily Statistics API with adjustedEndDate
+        /// 3. Receives adjustedEndDate (already adjusted by BrickDailyStatisticsEndDateAddDays)
+        /// 4. Stores in MongoDB (date validation is performed by the caller)
         /// </summary>
-        /// <param name="campaignId">The campaign ID from BrickCampaignData response</param>
-        /// <param name="startDate">The start date from BrickCampaignData response</param>
-        /// <param name="endDate">The end date from BrickCampaignData response</param>
-        /// <param name="campaignName">The campaign name from BrickCampaignData response</param>
-        private async Task ProcessBrickDailyStatisticsForCampaignAsync(int campaignId, DateTime startDate, DateTime endDate, string campaignName)
+        /// <param name="campaignId">The campaign ID from Brick Campaign endpoint response</param>
+        /// <param name="startDate">The start date from Brick Campaign endpoint response</param>
+        /// <param name="adjustedEndDate">The end date from Brick Campaign endpoint response, already adjusted by BrickDailyStatisticsEndDateAddDays</param>
+        /// <param name="campaignName">The campaign name from Brick Campaign endpoint response</param>
+        private async Task ProcessBrickDailyStatisticsForCampaignAsync(int campaignId, DateTime startDate, DateTime adjustedEndDate, string campaignName)
         {
             try
-            {
+            {               
                 string startDateStr = startDate.ToString("yyyy-MM-dd");
-                string endDateStr = endDate.ToString("yyyy-MM-dd");
+                string originalEndDateStr = adjustedEndDate.ToString("yyyy-MM-dd");
 
                 // Log the values being passed to the API
                 Console.WriteLine($"  Calling GetCampaignDailyStatisticsAsync with:");
                 Console.WriteLine($"    Campaign ID: {campaignId}");
                 Console.WriteLine($"    Start Date: {startDateStr} (from campaign data)");
-                Console.WriteLine($"    End Date: {endDateStr} (from campaign data)");
+                Console.WriteLine($"    End Date: {adjustedEndDate} (adjusted end date from campaign data)");
 
-                // Fetch daily statistics from Brick API using values from BrickCampaignData response
+                // Fetch daily statistics from Brick API using adjustedEndDate
                 // This is the primary approach - campaignId, startDate, and endDate come from the campaign data
-                string jsonResponse = await _apiService.GetCampaignDailyStatisticsAsync(campaignId, startDateStr, endDateStr);
+                string jsonResponse = await _apiService.GetCampaignDailyStatisticsAsync(campaignId, startDateStr, originalEndDateStr);
                 
                 if (string.IsNullOrEmpty(jsonResponse))
                 {
                     Console.WriteLine($"  No data received from Brick API for campaign ID {campaignId}");
                     return;
                 }
-
-                // Get the number of days to add to endDate from configuration (default: 7)
-                int endDateAddDays = int.Parse(ConfigurationManager.AppSettings["BrickDailyStatisticsEndDateAddDays"] ?? "7");
-                DateTime adjustedEndDate = endDate.AddDays(endDateAddDays);
-                
-                Console.WriteLine($"  Original end date: {endDate:yyyy-MM-dd}, Adjusted end date (with {endDateAddDays} days): {adjustedEndDate:yyyy-MM-dd}");
 
                 // Store daily statistics in MongoDB with campaign name and adjusted end date
                 int recordsStored = await _mongoService.StoreCampaignDailyStatisticsFromJsonAsync(

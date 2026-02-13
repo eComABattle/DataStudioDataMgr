@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using MongoDB.Bson;
@@ -47,9 +48,9 @@ namespace DataStudioDataMgr.Services.Brick
             }
 
             // Get MongoDB database name from App.config
-            //var databaseName = ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration";
-            var databaseName = "integration_test";
-            
+            var databaseName = ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration";
+            //var databaseName = "integration";
+
             // Expand environment variables in database name
             databaseName = Environment.ExpandEnvironmentVariables(databaseName);
             
@@ -139,6 +140,41 @@ namespace DataStudioDataMgr.Services.Brick
                     }
                     
                     Console.WriteLine($"Found {daysDataArray.Count} daily statistics records");
+                    
+                    // Delete existing daily statistics for this campaignId before inserting new ones
+                    string campaignIdString = campaignId.ToString();
+                    Console.WriteLine($"Deleting existing daily statistics for campaign ID {campaignId} (as string: '{campaignIdString}')...");
+                    
+                    // Build filter to match campaign ID with multiple field name and type variations
+                    var deleteFilter = Builders<BsonDocument>.Filter.Or(
+                        // Match "id" field as String (primary - MongoDB stores as string)
+                        Builders<BsonDocument>.Filter.Eq("id", new BsonString(campaignIdString)),
+                        // Match "id" field as Int32
+                        Builders<BsonDocument>.Filter.Eq("id", new BsonInt32(campaignId)),
+                        // Match "id" field as Int64
+                        Builders<BsonDocument>.Filter.Eq("id", new BsonInt64(campaignId)),
+                        // Match "Id" field as String
+                        Builders<BsonDocument>.Filter.Eq("Id", new BsonString(campaignIdString)),
+                        // Match "Id" field as Int32
+                        Builders<BsonDocument>.Filter.Eq("Id", new BsonInt32(campaignId)),
+                        // Match "Id" field as Int64
+                        Builders<BsonDocument>.Filter.Eq("Id", new BsonInt64(campaignId)),
+                        // Match "campaignId" field as String
+                        Builders<BsonDocument>.Filter.Eq("campaignId", new BsonString(campaignIdString)),
+                        // Match "campaignId" field as Int32
+                        Builders<BsonDocument>.Filter.Eq("campaignId", new BsonInt32(campaignId)),
+                        // Match "campaignId" field as Int64
+                        Builders<BsonDocument>.Filter.Eq("campaignId", new BsonInt64(campaignId)),
+                        // Match "CampaignId" field as String
+                        Builders<BsonDocument>.Filter.Eq("CampaignId", new BsonString(campaignIdString)),
+                        // Match "CampaignId" field as Int32
+                        Builders<BsonDocument>.Filter.Eq("CampaignId", new BsonInt32(campaignId)),
+                        // Match "CampaignId" field as Int64
+                        Builders<BsonDocument>.Filter.Eq("CampaignId", new BsonInt64(campaignId))
+                    );
+                    
+                    var deleteResult = await _dailyStatisticsCollection.DeleteManyAsync(deleteFilter);
+                    Console.WriteLine($"Deleted {deleteResult.DeletedCount} existing daily statistics document(s) for campaign ID {campaignId}");
                     
                     var documents = new List<BsonDocument>();
                     
@@ -346,10 +382,27 @@ namespace DataStudioDataMgr.Services.Brick
 
                 var documents = new List<BsonDocument>();
                 var importedAtDateTime = DateTime.UtcNow;
+                var campaignIdsToDelete = new List<int>();
                 
                 foreach (var campaignToken in campaignsArray)
                 {
                     var campaignObj = (JObject)campaignToken;
+                    
+                    // Extract campaign ID (check multiple field name variations and types)
+                    int? campaignId = null;
+                    
+                    // Try to extract ID using ParseInt helper which handles multiple types
+                    campaignId = ParseInt(campaignObj["id"]) ?? 
+                                 ParseInt(campaignObj["Id"]) ?? 
+                                 ParseInt(campaignObj["campaignId"]) ?? 
+                                 ParseInt(campaignObj["CampaignId"]);
+                    
+                    // If still not found, log available fields for debugging (only for first campaign)
+                    if (!campaignId.HasValue && documents.Count == 0)
+                    {
+                        var availableFields = string.Join(", ", campaignObj.Properties().Select(p => $"{p.Name} ({p.Type})"));
+                        Console.WriteLine($"Warning: Campaign ID not found in first campaign. Available fields: {availableFields}");
+                    }
                     
                     // Convert JObject to BsonDocument - all properties will be stored as stand-alone
                     var document = new BsonDocument();
@@ -363,6 +416,22 @@ namespace DataStudioDataMgr.Services.Brick
                         // Convert the JToken to BsonValue
                         BsonValue bsonValue = ConvertJTokenToBsonValue(propertyValue);
                         document[propertyName] = bsonValue;
+                    }
+                    
+                    // If campaign ID wasn't found in JSON, try to extract it from the document after conversion
+                    if (!campaignId.HasValue)
+                    {
+                        campaignId = GetIntValue(document, "id", "Id", "campaignId", "CampaignId");
+                    }
+                    
+                    // If campaign ID found, add to list for deletion
+                    if (campaignId.HasValue)
+                    {
+                        campaignIdsToDelete.Add(campaignId.Value);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Warning: Could not extract campaign ID from campaign. Skipping deletion for this campaign.");
                     }
                     
                     // Convert startDate and endDate to DateTime (check multiple naming variations)
@@ -379,6 +448,67 @@ namespace DataStudioDataMgr.Services.Brick
                     document["source"] = "BrickAPI";
                     
                     documents.Add(document);
+                }
+
+                // Delete existing campaigns by CampaignId before inserting new ones
+                if (campaignIdsToDelete.Count > 0)
+                {
+                    Console.WriteLine($"Deleting {campaignIdsToDelete.Count} existing campaign(s) by CampaignId before inserting new records...");
+                    Console.WriteLine($"Campaign IDs to delete: {string.Join(", ", campaignIdsToDelete)}");
+                    
+                    long totalDeleted = 0;
+                    
+                    // Delete each campaign individually to handle type variations (Int32, Int64, String, etc.)
+                    foreach (var campaignId in campaignIdsToDelete)
+                    {
+                        string campaignIdString = campaignId.ToString();
+                        
+                        // Build filter to match campaign ID with multiple field name and type variations
+                        var filter = Builders<BsonDocument>.Filter.Or(
+                            // Match "id" field as String (primary - MongoDB stores as string)
+                            Builders<BsonDocument>.Filter.Eq("id", new BsonString(campaignIdString)),
+                            // Match "id" field as Int32
+                            Builders<BsonDocument>.Filter.Eq("id", new BsonInt32(campaignId)),
+                            // Match "id" field as Int64
+                            Builders<BsonDocument>.Filter.Eq("id", new BsonInt64(campaignId)),
+                            // Match "Id" field as String
+                            Builders<BsonDocument>.Filter.Eq("Id", new BsonString(campaignIdString)),
+                            // Match "Id" field as Int32
+                            Builders<BsonDocument>.Filter.Eq("Id", new BsonInt32(campaignId)),
+                            // Match "Id" field as Int64
+                            Builders<BsonDocument>.Filter.Eq("Id", new BsonInt64(campaignId)),
+                            // Match "campaignId" field as String
+                            Builders<BsonDocument>.Filter.Eq("campaignId", new BsonString(campaignIdString)),
+                            // Match "campaignId" field as Int32
+                            Builders<BsonDocument>.Filter.Eq("campaignId", new BsonInt32(campaignId)),
+                            // Match "campaignId" field as Int64
+                            Builders<BsonDocument>.Filter.Eq("campaignId", new BsonInt64(campaignId)),
+                            // Match "CampaignId" field as String
+                            Builders<BsonDocument>.Filter.Eq("CampaignId", new BsonString(campaignIdString)),
+                            // Match "CampaignId" field as Int32
+                            Builders<BsonDocument>.Filter.Eq("CampaignId", new BsonInt32(campaignId)),
+                            // Match "CampaignId" field as Int64
+                            Builders<BsonDocument>.Filter.Eq("CampaignId", new BsonInt64(campaignId))
+                        );
+                        
+                        var deleteResult = await _campaignCollection.DeleteManyAsync(filter);
+                        if (deleteResult.DeletedCount > 0)
+                        {
+                            Console.WriteLine($"  Deleted {deleteResult.DeletedCount} document(s) for campaign ID {campaignId} (searched as string: '{campaignIdString}')");
+                            totalDeleted += deleteResult.DeletedCount;
+                        }
+                    }
+                    
+                    Console.WriteLine($"Total deleted: {totalDeleted} existing campaign document(s)");
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: No campaign IDs were extracted from the JSON response. Cannot delete existing documents.");
+                    Console.WriteLine($"This may result in duplicate campaigns if they already exist in MongoDB.");
+                    if (documents.Count > 0)
+                    {
+                        Console.WriteLine($"First campaign document fields: {string.Join(", ", documents[0].Names)}");
+                    }
                 }
 
                 if (documents.Count > 0)

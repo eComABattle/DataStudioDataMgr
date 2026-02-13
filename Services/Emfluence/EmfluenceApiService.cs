@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
 using DataStudioDataMgr.Configuration;
+using System.Linq;
 
 namespace DataStudioDataMgr.Services.Emfluence
 {
@@ -110,7 +111,10 @@ namespace DataStudioDataMgr.Services.Emfluence
                 
                 if (!string.IsNullOrEmpty(status))
                     queryParams.Add($"status={Uri.EscapeDataString(status)}");
-                
+
+                if (string.IsNullOrEmpty(dateSentStart))
+                    dateSentStart = DateTime.Now.AddMonths(-17).ToString("yyyy-MM-dd");
+
                 if (!string.IsNullOrEmpty(dateSentStart))
                     queryParams.Add($"dateSentStart={Uri.EscapeDataString(dateSentStart)}");
                 
