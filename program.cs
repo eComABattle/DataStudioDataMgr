@@ -18,6 +18,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Configuration;
+
 class Program
 {
     private static readonly string OutputDirectory = ConfigurationManager.AppSettings["OutputDirectory"] ?? "output";
@@ -25,11 +26,83 @@ class Program
     private static readonly bool LogToFile = bool.Parse(ConfigurationManager.AppSettings["LogToFile"] ?? "false");
     private static readonly string LogFilePath = ConfigurationManager.AppSettings["LogFilePath"] ?? "DataStudioDataMgr.log";
     private static readonly bool EnableMongoDbStorage = bool.Parse(ConfigurationManager.AppSettings["EnableMongoDbStorage"] ?? "true");
+
+    /// <summary>
+    /// Validates that config values using environment variables (%VAR%) are set on this machine.
+    /// Logs warnings when values still contain unexpanded placeholders after expansion.
+    /// See DEPLOYMENT.md for deployment and environment variable setup.
+    /// </summary>
+    private static void ValidateConfigOnStartupIfEnabled()
+    {
+        bool validate = bool.Parse(ConfigurationManager.AppSettings["ValidateConfigOnStartup"] ?? "false");
+        if (!validate) return;
+
+        LogMessage("Validating configuration (environment variables)...");
+        var warnings = new System.Collections.Generic.List<string>();
+
+        // Connection strings
+        try
+        {
+            var cs = ConfigurationManager.ConnectionStrings["MongoDbConnectionString"]?.ConnectionString;
+            if (!string.IsNullOrEmpty(cs))
+            {
+                var expanded = Environment.ExpandEnvironmentVariables(cs);
+                if (expanded.Contains("%"))
+                    warnings.Add("MongoDbConnectionString may have unset env vars (still contains %...%). Set MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_HOST, MONGODB_DATABASE on this machine.");
+            }
+        }
+        catch { /* ignore */ }
+
+        // App settings that commonly use %VAR%
+        var appKeys = new[]
+        {
+            "EmfluenceAccessToken", "ShopToCookSftpPassword", "AppCardSftpHost", "AppCardSftpPassword",
+            "BrickPassword", "MongoDbDatabaseName", "MongoDbTestDatabaseName"
+        };
+        foreach (var key in appKeys)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrEmpty(raw)) continue;
+                var expanded = Environment.ExpandEnvironmentVariables(raw);
+                if (expanded.Contains("%"))
+                    warnings.Add($"{key} may not be set on this machine (still contains %...%). Set the corresponding environment variable on this machine.");
+            }
+            catch { /* ignore */ }
+        }
+
+        // Store_N_AccessToken
+        for (int i = 1; i <= 20; i++)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[$"Store_{i}_AccessToken"];
+                if (string.IsNullOrEmpty(raw)) continue;
+                var expanded = Environment.ExpandEnvironmentVariables(raw);
+                if (expanded.Contains("%"))
+                    warnings.Add($"Store_{i}_AccessToken may not be set on this machine (still contains %...%). Set STORE_{i}_ACCESS_TOKEN (or the value in config) on this machine.");
+            }
+            catch { /* ignore */ }
+        }
+
+        if (warnings.Count > 0)
+        {
+            LogMessage("Configuration validation found potential issues (environment variables not set on this machine):");
+            foreach (var w in warnings)
+                LogMessage("  WARNING: " + w);
+            LogMessage("See DEPLOYMENT.md for how to set environment variables on the deployment target.");
+        }
+        else
+            LogMessage("Configuration validation: no unexpanded %VAR% placeholders detected.");
+    }
+
     static async Task Main(string[] args)
     {
         try
         {
             LogMessage("DataStudio Data Manager - Starting...");
+            ValidateConfigOnStartupIfEnabled();
             bool useLocalFile = args.Length > 0 && args[0].ToLower() == "--local";
             if (useLocalFile)
             {
