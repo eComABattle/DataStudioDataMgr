@@ -27,7 +27,7 @@ namespace DataStudioDataMgr.Services.MongoDb
             // Expand environment variables in connection string
             connectionString = Environment.ExpandEnvironmentVariables(connectionString);
             
-            string databaseName = ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration_test";
+            string databaseName = ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration";
             string collectionName = ConfigurationManager.AppSettings["MongoDbEmfluenceCollection"] ?? "emfluence_email";
             
             // Expand environment variables in database and collection names
@@ -36,6 +36,8 @@ namespace DataStudioDataMgr.Services.MongoDb
 
             var client = new MongoClient(connectionString);
             _database = client.GetDatabase(databaseName);
+
+
             _emfluenceCollection = _database.GetCollection<EmfluenceEmailDocument>(collectionName);
             _campaignCollection = _database.GetCollection<CampaignDocument>("ad_campaign");
             _unfiPostCampaignStoreCollection = _database.GetCollection<UnfiPostCampaignStoreDocument>("unfi_post_campaign_store");

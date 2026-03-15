@@ -136,45 +136,51 @@ namespace DataStudioDataMgr.Services.GiveX
 
             // Get MongoDB database name from App.config
             var databaseName = System.Configuration.ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration_test";
-            databaseName = "integration_test";
+            //databaseName = "integration_test";
+
+            var emailDatabaseName = "ad_campaign";
+            var loyaltyDatabaseName = "loyalty_analytics";
+            var couponDatabaseName = "digital_coupon_analytics";
 
             // Expand environment variables in database name
-            databaseName = Environment.ExpandEnvironmentVariables(databaseName);
+            //databaseName = Environment.ExpandEnvironmentVariables(databaseName);
 
             Console.WriteLine($"Using MongoDB database for GiveX: {databaseName}");
 
             Console.WriteLine($"Connecting to MongoDB...");
             var client = new MongoClient(connectionString);
-            _database = client.GetDatabase(databaseName);
+            var _emailDatabase = client.GetDatabase(emailDatabaseName);
+            var _loyaltyDatabase = client.GetDatabase(loyaltyDatabaseName);
+            var _couponDatabase = client.GetDatabase(couponDatabaseName);
 
-            _emailCollection = _database.GetCollection<GiveXEmailDocument>("givex_email");
-            _loyaltyCollection = _database.GetCollection<GiveXLoyaltyDocument>("givex_loyalty");
-            _couponCollection = _database.GetCollection<GiveXCouponDocument>("givex_coupon");
+            _emailCollection = _emailDatabase.GetCollection<GiveXEmailDocument>("email");
+            _loyaltyCollection = _loyaltyDatabase.GetCollection<GiveXLoyaltyDocument>("events");
+            _couponCollection = _couponDatabase.GetCollection<GiveXCouponDocument>("events");
         }
 
-        public GiveXMongoService(string connectionString, string databaseName = null)
-        {
-            // Expand environment variables in connection string
-            connectionString = Environment.ExpandEnvironmentVariables(connectionString);
+        //public GiveXMongoService(string connectionString, string databaseName = null)
+        //{
+        //    // Expand environment variables in connection string
+        //    connectionString = Environment.ExpandEnvironmentVariables(connectionString);
 
-            var client = new MongoClient(connectionString);
+        //    var client = new MongoClient(connectionString);
 
-            // Use provided databaseName or fall back to default
-            if (string.IsNullOrEmpty(databaseName))
-            {
-                databaseName = System.Configuration.ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration_test";
-            }
+        //    // Use provided databaseName or fall back to default
+        //    if (string.IsNullOrEmpty(databaseName))
+        //    {
+        //        databaseName = System.Configuration.ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration_test";
+        //    }
 
-            // Expand environment variables in database name
-            //databaseName = Environment.ExpandEnvironmentVariables(databaseName);
-            databaseName = "integration_test";
+        //    // Expand environment variables in database name
+        //    //databaseName = Environment.ExpandEnvironmentVariables(databaseName);
+        //    databaseName = "integration_test";
 
-            _database = client.GetDatabase(databaseName);
+        //    _database = client.GetDatabase(databaseName);
 
-            _emailCollection = _database.GetCollection<GiveXEmailDocument>("givex_email");
-            _loyaltyCollection = _database.GetCollection<GiveXLoyaltyDocument>("givex_loyalty");
-            _couponCollection = _database.GetCollection<GiveXCouponDocument>("givex_coupon");
-        }
+        //    _emailCollection = _database.GetCollection<GiveXEmailDocument>("givex_email");
+        //    _loyaltyCollection = _database.GetCollection<GiveXLoyaltyDocument>("givex_loyalty");
+        //    _couponCollection = _database.GetCollection<GiveXCouponDocument>("givex_coupon");
+        //}
 
         /// <summary>
         /// Stores email data in MongoDB
