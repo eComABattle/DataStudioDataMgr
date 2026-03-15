@@ -518,6 +518,22 @@ class Program
                 string couponCsvPath = Path.Combine(OutputDirectory, "coupon_data.csv");
                 couponService.ConvertCouponResponseToCsv(couponResult, couponCsvPath);
             }
+
+            // Load couponResult into MongoDB (digital_coupon_analytics.coupon_api)
+            if (couponResult != null)
+            {
+                try
+                {
+                    var couponMongoService = new CouponApiMongoService();
+                    int stored = await couponMongoService.StoreCouponApiResultAsync(couponResult);
+                    LogMessage($"Coupon API result loaded into MongoDB (digital_coupon_analytics.coupon_api): {stored} document(s).");
+                }
+                catch (Exception ex)
+                {
+                    LogMessage($"Error loading Coupon API result into MongoDB: {ex.Message}");
+                }
+            }
+
             LogMessage("Coupon API processing completed successfully.");
         }
         catch (HttpRequestException ex)

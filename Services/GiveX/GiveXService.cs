@@ -71,9 +71,9 @@ namespace DataStudioDataMgr.Services.GiveX
                     }
                 }
 
-                // Step 2: Test MongoDB connection
+                // Step 2: Test MongoDB connection (GiveX email database: ad_campaign)
                 Console.WriteLine("Step 2: Testing MongoDB connection...");
-                bool connectionSuccessful = await _mongoService.TestConnectionAsync();
+                bool connectionSuccessful = await _mongoService.TestConnectionAsync(GiveXMongoService.EmailDatabaseName);
 
                 if (!connectionSuccessful)
                 {
@@ -86,9 +86,9 @@ namespace DataStudioDataMgr.Services.GiveX
                     return;
                 }
 
-                // Step 3: Ensure MongoDB collections exist
+                // Step 3: Ensure MongoDB collections exist (ad_campaign)
                 Console.WriteLine("Step 3: Ensuring MongoDB collections exist...");
-                await _mongoService.EnsureCollectionsExistAsync();
+                await _mongoService.EnsureCollectionsExistAsync(GiveXMongoService.EmailDatabaseName);
 
                 // Step 4: Process Email CSV files and store in MongoDB with appropriate client tokens
                 int totalEmailRecords = 0;
@@ -290,9 +290,9 @@ namespace DataStudioDataMgr.Services.GiveX
                     }
                 }
 
-                // Step 2: Test MongoDB connection
+                // Step 2: Test MongoDB connection (GiveX loyalty database: loyalty_analytics)
                 Console.WriteLine("Step 2: Testing MongoDB connection...");
-                bool connectionSuccessful = await _mongoService.TestConnectionAsync();
+                bool connectionSuccessful = await _mongoService.TestConnectionAsync(GiveXMongoService.LoyaltyDatabaseName);
 
                 if (!connectionSuccessful)
                 {
@@ -300,9 +300,9 @@ namespace DataStudioDataMgr.Services.GiveX
                     return;
                 }
 
-                // Step 3: Ensure MongoDB collections exist
+                // Step 3: Ensure MongoDB collections exist (loyalty_analytics)
                 Console.WriteLine("Step 3: Ensuring MongoDB collections exist...");
-                await _mongoService.EnsureCollectionsExistAsync();
+                await _mongoService.EnsureCollectionsExistAsync(GiveXMongoService.LoyaltyDatabaseName);
 
                 // Step 4: Process Loyalty CSV files and store in MongoDB
                 int totalLoyaltyRecords = 0;
@@ -446,9 +446,9 @@ namespace DataStudioDataMgr.Services.GiveX
                     }
                 }
 
-                // Step 2: Test MongoDB connection
+                // Step 2: Test MongoDB connection (GiveX coupon database: digital_coupon_analytics)
                 Console.WriteLine("Step 2: Testing MongoDB connection...");
-                bool connectionSuccessful = await _mongoService.TestConnectionAsync();
+                bool connectionSuccessful = await _mongoService.TestConnectionAsync(GiveXMongoService.CouponDatabaseName);
 
                 if (!connectionSuccessful)
                 {
@@ -456,9 +456,9 @@ namespace DataStudioDataMgr.Services.GiveX
                     return;
                 }
 
-                // Step 3: Ensure MongoDB collections exist
+                // Step 3: Ensure MongoDB collections exist (digital_coupon_analytics)
                 Console.WriteLine("Step 3: Ensuring MongoDB collections exist...");
-                await _mongoService.EnsureCollectionsExistAsync();
+                await _mongoService.EnsureCollectionsExistAsync(GiveXMongoService.CouponDatabaseName);
 
                 // Step 4: Process Coupon CSV files and store in MongoDB
                 int totalCouponRecords = 0;

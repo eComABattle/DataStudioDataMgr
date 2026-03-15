@@ -108,10 +108,17 @@ namespace DataStudioDataMgr.Services.GiveX
     /// </summary>
     public class GiveXMongoService
     {
-        private readonly IMongoDatabase _database;
+        private readonly MongoClient _client;
         private readonly IMongoCollection<GiveXEmailDocument> _emailCollection;
         private readonly IMongoCollection<GiveXLoyaltyDocument> _loyaltyCollection;
         private readonly IMongoCollection<GiveXCouponDocument> _couponCollection;
+
+        /// <summary>
+        /// GiveX database names: email = ad_campaign, loyalty = loyalty_analytics, coupon = digital_coupon_analytics.
+        /// </summary>
+        public const string EmailDatabaseName = "ad_campaign";
+        public const string LoyaltyDatabaseName = "loyalty_analytics";
+        public const string CouponDatabaseName = "digital_coupon_analytics";
 
         public GiveXMongoService()
         {
@@ -134,28 +141,15 @@ namespace DataStudioDataMgr.Services.GiveX
                 Console.WriteLine($"Using MongoDB connection string from config (with environment variables expanded)");
             }
 
-            // Get MongoDB database name from App.config
-            var databaseName = System.Configuration.ConfigurationManager.AppSettings["MongoDbDatabaseName"] ?? "integration_test";
-            //databaseName = "integration_test";
+            Console.WriteLine("Connecting to MongoDB...");
+            _client = new MongoClient(connectionString);
+            var emailDatabase = _client.GetDatabase(EmailDatabaseName);
+            var loyaltyDatabase = _client.GetDatabase(LoyaltyDatabaseName);
+            var couponDatabase = _client.GetDatabase(CouponDatabaseName);
 
-            var emailDatabaseName = "ad_campaign";
-            var loyaltyDatabaseName = "loyalty_analytics";
-            var couponDatabaseName = "digital_coupon_analytics";
-
-            // Expand environment variables in database name
-            //databaseName = Environment.ExpandEnvironmentVariables(databaseName);
-
-            Console.WriteLine($"Using MongoDB database for GiveX: {databaseName}");
-
-            Console.WriteLine($"Connecting to MongoDB...");
-            var client = new MongoClient(connectionString);
-            var _emailDatabase = client.GetDatabase(emailDatabaseName);
-            var _loyaltyDatabase = client.GetDatabase(loyaltyDatabaseName);
-            var _couponDatabase = client.GetDatabase(couponDatabaseName);
-
-            _emailCollection = _emailDatabase.GetCollection<GiveXEmailDocument>("email");
-            _loyaltyCollection = _loyaltyDatabase.GetCollection<GiveXLoyaltyDocument>("events");
-            _couponCollection = _couponDatabase.GetCollection<GiveXCouponDocument>("events");
+            _emailCollection = emailDatabase.GetCollection<GiveXEmailDocument>("email");
+            _loyaltyCollection = loyaltyDatabase.GetCollection<GiveXLoyaltyDocument>("events");
+            _couponCollection = couponDatabase.GetCollection<GiveXCouponDocument>("events");
         }
 
         //public GiveXMongoService(string connectionString, string databaseName = null)
@@ -365,81 +359,76 @@ namespace DataStudioDataMgr.Services.GiveX
         }
 
         /// <summary>
-        /// Tests the MongoDB connection
+        /// Gets the collection name used for the given GiveX database.
+        /// ad_campaign -> "email"; loyalty_analytics and digital_coupon_analytics -> "events".
         /// </summary>
-        public async Task<bool> TestConnectionAsync()
+        private static string GetCollectionNameForDatabase(string databaseName)
         {
+            if (string.Equals(databaseName, EmailDatabaseName, StringComparison.OrdinalIgnoreCase))
+                return "email";
+            if (string.Equals(databaseName, LoyaltyDatabaseName, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(databaseName, CouponDatabaseName, StringComparison.OrdinalIgnoreCase))
+                return "events";
+            return "events";
+        }
+
+        /// <summary>
+        /// Tests the MongoDB connection for the given database.
+        /// </summary>
+        /// <param name="databaseName">MongoDB database name (e.g. ad_campaign, loyalty_analytics, digital_coupon_analytics).</param>
+        public async Task<bool> TestConnectionAsync(string databaseName)
+        {
+            if (string.IsNullOrEmpty(databaseName))
+                throw new ArgumentException("Database name is required.", nameof(databaseName));
             try
             {
-                Console.WriteLine("Testing MongoDB connection for GiveX service...");
+                Console.WriteLine($"Testing MongoDB connection for GiveX service (database: {databaseName})...");
 
-                // Try to list collections to test connection
-                var collections = await _database.ListCollectionNamesAsync();
+                var database = _client.GetDatabase(databaseName);
+                var collections = await database.ListCollectionNamesAsync();
                 var collectionNames = await collections.ToListAsync();
 
-                Console.WriteLine($"MongoDB connection successful! Found {collectionNames.Count} collections in database '{_database.DatabaseNamespace.DatabaseName}'");
+                Console.WriteLine($"MongoDB connection successful! Found {collectionNames.Count} collections in database '{databaseName}'");
 
                 return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"MongoDB connection failed: {ex.Message}");
-                Console.WriteLine($"Connection details:");
-                Console.WriteLine($"  Database: {_database.DatabaseNamespace.DatabaseName}");
+                Console.WriteLine($"  Database: {databaseName}");
                 Console.WriteLine($"  Error Type: {ex.GetType().Name}");
-
                 if (ex.InnerException != null)
-                {
                     Console.WriteLine($"  Inner Exception: {ex.InnerException.Message}");
-                }
-
                 return false;
             }
         }
 
         /// <summary>
-        /// Ensures MongoDB collections exist
+        /// Ensures the required collection exists in the given MongoDB database.
+        /// ad_campaign uses collection "email"; loyalty_analytics and digital_coupon_analytics use "events".
         /// </summary>
-        public async Task EnsureCollectionsExistAsync()
+        /// <param name="databaseName">MongoDB database name (e.g. ad_campaign, loyalty_analytics, digital_coupon_analytics).</param>
+        public async Task EnsureCollectionsExistAsync(string databaseName)
         {
+            if (string.IsNullOrEmpty(databaseName))
+                throw new ArgumentException("Database name is required.", nameof(databaseName));
             try
             {
-                Console.WriteLine("Ensuring GiveX MongoDB collections exist...");
+                Console.WriteLine($"Ensuring GiveX MongoDB collection exists in database '{databaseName}'...");
 
-                var collections = await _database.ListCollectionNamesAsync();
+                var database = _client.GetDatabase(databaseName);
+                var collections = await database.ListCollectionNamesAsync();
                 var collectionNames = await collections.ToListAsync();
+                var collectionName = GetCollectionNameForDatabase(databaseName);
 
-                // Check if email collection exists, create if not
-                if (!collectionNames.Contains("givex_email"))
+                if (!collectionNames.Contains(collectionName))
                 {
-                    await _database.CreateCollectionAsync("givex_email");
-                    Console.WriteLine("Created collection: givex_email");
+                    await database.CreateCollectionAsync(collectionName);
+                    Console.WriteLine($"Created collection '{collectionName}' in database '{databaseName}'.");
                 }
                 else
                 {
-                    Console.WriteLine("Collection already exists: givex_email");
-                }
-
-                // Check if loyalty collection exists, create if not
-                if (!collectionNames.Contains("givex_loyalty"))
-                {
-                    await _database.CreateCollectionAsync("givex_loyalty");
-                    Console.WriteLine("Created collection: givex_loyalty");
-                }
-                else
-                {
-                    Console.WriteLine("Collection already exists: givex_loyalty");
-                }
-
-                // Check if coupon collection exists, create if not
-                if (!collectionNames.Contains("givex_coupon"))
-                {
-                    await _database.CreateCollectionAsync("givex_coupon");
-                    Console.WriteLine("Created collection: givex_coupon");
-                }
-                else
-                {
-                    Console.WriteLine("Collection already exists: givex_coupon");
+                    Console.WriteLine($"Collection '{collectionName}' already exists in database '{databaseName}'.");
                 }
             }
             catch (Exception ex)

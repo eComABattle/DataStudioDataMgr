@@ -31,7 +31,7 @@ namespace DataStudioDataMgr.Services.BrData
         public DateTime? last_updated { get; set; }
         public int row_count { get; set; }
         public string file_name { get; set; }
-        public DateTime importedAt { get; set; } = DateTime.UtcNow;
+        public DateTime createAt { get; set; } = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ namespace DataStudioDataMgr.Services.BrData
 
             // Expand environment variables in database name
             databaseName = Environment.ExpandEnvironmentVariables(databaseName);
-            databaseName = "integration_test";
+            databaseName = "pos_analytics";
 
             Console.WriteLine($"Using MongoDB database for BrData: {databaseName}");
 
@@ -76,7 +76,7 @@ namespace DataStudioDataMgr.Services.BrData
             var client = new MongoClient(connectionString);
             _database = client.GetDatabase(databaseName);
 
-            _posCollection = _database.GetCollection<BrDataPosDocument>("brdata_pos");
+            _posCollection = _database.GetCollection<BrDataPosDocument>("brdata");
         }
 
         public BrDataMongoService(string connectionString, string databaseName = null)
@@ -97,7 +97,7 @@ namespace DataStudioDataMgr.Services.BrData
 
             _database = client.GetDatabase(databaseName);
 
-            _posCollection = _database.GetCollection<BrDataPosDocument>("brdata_pos");
+            _posCollection = _database.GetCollection<BrDataPosDocument>("brdata");
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace DataStudioDataMgr.Services.BrData
                         last_updated = pos.LastUpdated,  
                         row_count = 1,
                         file_name = pos.SourceFileName,
-                        importedAt = currentDate
+                        createAt = currentDate
                     });
                 }
 

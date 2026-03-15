@@ -135,8 +135,10 @@ namespace DataStudioDataMgr.Services.BrData
                 }
 
                 // Step 5: Create indexes for better performance
-                Console.WriteLine("Step 5: Creating MongoDB indexes...");
-                await _mongoService.CreateIndexesAsync();
+
+                // too many records to index in one go, and indexes will be created on a rolling basis as data is inserted
+                //Console.WriteLine("Step 5: Creating MongoDB indexes...");
+                //await _mongoService.CreateIndexesAsync();
 
                 // Step 6: Get final counts
                 Console.WriteLine("Step 6: Getting collection counts...");
