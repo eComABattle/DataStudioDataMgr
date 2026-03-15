@@ -107,14 +107,14 @@ WITH BaseData AS (
         ISNULL(GroupCode, 'N/A') AS Customer,
         ap.[Name] AS Store,
         CASE WHEN [Count] >= 0 THEN [Count] ELSE 0 END AS MetricValue
-    FROM Posts.Post p
-    INNER JOIN Posts.PostTarget ptar ON ptar.PostId = p.Id
-    INNER JOIN Posts.PostTargetAccountPlatform ptap ON ptap.PostTargetId = ptar.Id
-    INNER JOIN metrics.PostMetric pmet ON pmet.PostTargetAccountPlatformId = ptap.Id
-    INNER JOIN Types.MetricType mt ON mt.Id = pmet.MetricTypeId
-    INNER JOIN Accounts.AccountPlatform ap ON ap.Id = ptap.AccountPlatformId
-    INNER JOIN Platforms.PlatformTarget pt ON pt.Id = ptar.PlatformTargetId
-    INNER JOIN Posts.PostMedia pm ON pm.PostId = p.Id AND pm.PlatformTargetId = pt.Id
+    FROM Apollo.MediaStudio.Posts.Post p
+    INNER JOIN Apollo.MediaStudio.Posts.PostTarget ptar ON ptar.PostId = p.Id
+    INNER JOIN Apollo.MediaStudio.Posts.PostTargetAccountPlatform ptap ON ptap.PostTargetId = ptar.Id
+    INNER JOIN Apollo.MediaStudio.metrics.PostMetric pmet ON pmet.PostTargetAccountPlatformId = ptap.Id
+    INNER JOIN Apollo.MediaStudio.Types.MetricType mt ON mt.Id = pmet.MetricTypeId
+    INNER JOIN Apollo.MediaStudio.Accounts.AccountPlatform ap ON ap.Id = ptap.AccountPlatformId
+    INNER JOIN Apollo.MediaStudio.Platforms.PlatformTarget pt ON pt.Id = ptar.PlatformTargetId
+    INNER JOIN Apollo.MediaStudio.Posts.PostMedia pm ON pm.PostId = p.Id AND pm.PlatformTargetId = pt.Id
     WHERE p.[Name] NOT LIKE '%test%'
 ),
 DailyTotals AS (

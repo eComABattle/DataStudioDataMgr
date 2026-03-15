@@ -45,7 +45,7 @@ namespace DataStudioDataMgr.Services.MediaStudio
             , pcs.ExternalId
             , isnull(pcs.SecondaryExternalId, '') as SecondaryExternalId
             , pcs.Url
-            from [MediaStudio].[Posts].[UNFIPostCampaignStore] pcs with (nolock)";
+            from Apollo.[MediaStudio].[Posts].[UNFIPostCampaignStore] pcs with (nolock)";
 
             try
             {
