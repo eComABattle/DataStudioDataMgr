@@ -91,51 +91,117 @@ namespace DataStudioDataMgr.Services.DigitalStudio
 //FROM WithDelta
 //ORDER BY MetricDate DESC, PostID, Store, MetricType";
 
+            //string query = @"
+//WITH BaseData AS (
+//    SELECT
+//        pt.[Name] AS Platform,
+//        mt.[Name] AS MetricType,
+//        mt.Id AS MetricTypeId,
+//        p.Id AS PostID,
+//        p.[Name] AS PostName,
+//		ptar.MetaData,
+//        pm.[Url],
+//        CAST(p.ScheduledDate AS DATETIME) AS ScheduledDate,
+//        CAST(p.PublishedDate AS DATETIME) AS PublishedDate,
+//        pmet.[Date] AS MetricDate,
+//        ISNULL(GroupCode, 'N/A') AS Customer,
+//        ap.[Name] AS Store,
+//        CASE WHEN [Count] >= 0 THEN [Count] ELSE 0 END AS MetricValue
+//    FROM Apollo.MediaStudio.Posts.Post p
+//    INNER JOIN Apollo.MediaStudio.Posts.PostTarget ptar ON ptar.PostId = p.Id
+//    INNER JOIN Apollo.MediaStudio.Posts.PostTargetAccountPlatform ptap ON ptap.PostTargetId = ptar.Id
+//    INNER JOIN Apollo.MediaStudio.metrics.PostMetric pmet ON pmet.PostTargetAccountPlatformId = ptap.Id
+//    INNER JOIN Apollo.MediaStudio.Types.MetricType mt ON mt.Id = pmet.MetricTypeId
+//    INNER JOIN Apollo.MediaStudio.Accounts.AccountPlatform ap ON ap.Id = ptap.AccountPlatformId
+//    INNER JOIN Apollo.MediaStudio.Platforms.PlatformTarget pt ON pt.Id = ptar.PlatformTargetId
+//    INNER JOIN Apollo.MediaStudio.Posts.PostMedia pm ON pm.PostId = p.Id AND pm.PlatformTargetId = pt.Id
+//    WHERE p.[Name] NOT LIKE '%test%'
+//),
+//DailyTotals AS (
+//    SELECT
+//        Platform, MetricType, MetricTypeId, PostID, PostName, MetaData, [Url],
+//        CAST(ScheduledDate AS DATETIME2) AS PostScheduledDate,
+//        CAST(PublishedDate AS DATETIME2) AS PostPublishedDate,
+//        MetricDate, Customer, Store,
+//        SUM(MetricValue) AS TotalMetricValue
+//    FROM BaseData
+//    GROUP BY Platform, MetricType, MetricTypeId, PostID, PostName, MetaData, [Url],
+//             CAST(ScheduledDate AS DATETIME2), CAST(PublishedDate AS DATETIME2),
+//             MetricDate, Customer, Store
+//),
+//WithDelta AS (
+//    SELECT *,
+//        ISNULL(
+//            TotalMetricValue - LAG(TotalMetricValue) OVER (
+//                PARTITION BY Store, MetricTypeId, Platform, PostID
+//                ORDER BY MetricDate
+//            ),
+//            TotalMetricValue
+//        ) AS MetricDelta
+//    FROM DailyTotals
+//)
+//SELECT
+//Platform
+//,MetricType
+//, convert(varchar,MetricTypeId) as MetricTypeId
+//, convert(varchar,PostID) as PostID
+//, PostName
+//, MetaData
+//, Url
+//, IsNull(convert(varchar,PostScheduledDate, 110), '01-01-1900') as PostScheduledDate
+//, IsNull(convert(varchar,PostPublishedDate, 110), '01-01-1900') as PostPublishedDate
+//, IsNull(convert(varchar,MetricDate, 110),'01-01-1900') as MetricDate
+//, Customer as ClientToken
+//, Store
+//, isnull(TotalMetricValue,0) as TotalMetricValue
+//, isnull(MetricDelta,0) as MetricDelta
+//FROM WithDelta
+//ORDER BY MetricDate DESC, PostID, Store, MetricType";
+
             string query = @"
 WITH BaseData AS (
-    SELECT
-        pt.[Name] AS Platform,
-        mt.[Name] AS MetricType,
-        mt.Id AS MetricTypeId,
-        p.Id AS PostID,
-        p.[Name] AS PostName,
-		ptar.MetaData,
-        pm.[Url],
-        CAST(p.ScheduledDate AS DATETIME) AS ScheduledDate,
-        CAST(p.PublishedDate AS DATETIME) AS PublishedDate,
-        pmet.[Date] AS MetricDate,
-        ISNULL(GroupCode, 'N/A') AS Customer,
-        ap.[Name] AS Store,
+    SELECT 
+        pt.[Name] AS Platform, 
+        mt.[Name] AS MetricType, 
+        mt.Id AS MetricTypeId, 
+        p.Id AS PostID, 
+        p.[Name] AS PostName, 
+        ptar.MetaData, 
+        pm.[Url], 
+        -- Cast early to ensure all CTEs treat these as Dates, not Strings
+        CAST(p.ScheduledDate AS DATETIME2) AS PostScheduledDate, 
+        CAST(p.PublishedDate AS DATETIME2) AS PostPublishedDate, 
+        CAST(pmet.[Date] AS DATETIME2) AS MetricDate, 
+        GroupCode AS Customer, 
+        ap.[Name] AS Store, 
         CASE WHEN [Count] >= 0 THEN [Count] ELSE 0 END AS MetricValue
-    FROM Apollo.MediaStudio.Posts.Post p
-    INNER JOIN Apollo.MediaStudio.Posts.PostTarget ptar ON ptar.PostId = p.Id
-    INNER JOIN Apollo.MediaStudio.Posts.PostTargetAccountPlatform ptap ON ptap.PostTargetId = ptar.Id
-    INNER JOIN Apollo.MediaStudio.metrics.PostMetric pmet ON pmet.PostTargetAccountPlatformId = ptap.Id
-    INNER JOIN Apollo.MediaStudio.Types.MetricType mt ON mt.Id = pmet.MetricTypeId
-    INNER JOIN Apollo.MediaStudio.Accounts.AccountPlatform ap ON ap.Id = ptap.AccountPlatformId
-    INNER JOIN Apollo.MediaStudio.Platforms.PlatformTarget pt ON pt.Id = ptar.PlatformTargetId
-    INNER JOIN Apollo.MediaStudio.Posts.PostMedia pm ON pm.PostId = p.Id AND pm.PlatformTargetId = pt.Id
+    FROM Posts.Post p
+    INNER JOIN Posts.PostTarget ptar ON ptar.PostId = p.Id
+    INNER JOIN Posts.PostTargetAccountPlatform ptap ON ptap.PostTargetId = ptar.Id
+    INNER JOIN metrics.PostMetric pmet ON pmet.PostTargetAccountPlatformId = ptap.Id
+    INNER JOIN Types.MetricType mt ON mt.Id = pmet.MetricTypeId
+    INNER JOIN Accounts.AccountPlatform ap ON ap.Id = ptap.AccountPlatformId
+    INNER JOIN Platforms.PlatformTarget pt ON pt.Id = ptar.PlatformTargetId
+    LEFT JOIN Posts.PostMedia pm ON pm.PostId = p.Id AND pm.PlatformTargetId = pt.Id
     WHERE p.[Name] NOT LIKE '%test%'
-),
+), 
 DailyTotals AS (
-    SELECT
-        Platform, MetricType, MetricTypeId, PostID, PostName, MetaData, [Url],
-        CAST(ScheduledDate AS DATETIME2) AS PostScheduledDate,
-        CAST(PublishedDate AS DATETIME2) AS PostPublishedDate,
-        MetricDate, Customer, Store,
+    SELECT 
+        Platform, MetricType, MetricTypeId, PostID, PostName, MetaData, [Url], 
+        PostScheduledDate, PostPublishedDate, MetricDate, Customer, Store, 
         SUM(MetricValue) AS TotalMetricValue
     FROM BaseData
-    GROUP BY Platform, MetricType, MetricTypeId, PostID, PostName, MetaData, [Url],
-             CAST(ScheduledDate AS DATETIME2), CAST(PublishedDate AS DATETIME2),
-             MetricDate, Customer, Store
-),
+    GROUP BY 
+        Platform, MetricType, MetricTypeId, PostID, PostName, MetaData, [Url], 
+        PostScheduledDate, PostPublishedDate, MetricDate, Customer, Store
+), 
 WithDelta AS (
-    SELECT *,
+    SELECT *, 
         ISNULL(
             TotalMetricValue - LAG(TotalMetricValue) OVER (
-                PARTITION BY Store, MetricTypeId, Platform, PostID
-                ORDER BY MetricDate
-            ),
+                PARTITION BY Store, MetricTypeId, Platform, PostID 
+                ORDER BY MetricDate -- Now sorting by DATETIME2, not string
+            ), 
             TotalMetricValue
         ) AS MetricDelta
     FROM DailyTotals
@@ -147,16 +213,16 @@ Platform
 , convert(varchar,PostID) as PostID
 , PostName
 , MetaData
-, Url
-, IsNull(convert(varchar,PostScheduledDate, 110), '01-01-1900') as PostScheduledDate
-, IsNull(convert(varchar,PostPublishedDate, 110), '01-01-1900') as PostPublishedDate
-, IsNull(convert(varchar,MetricDate, 110),'01-01-1900') as MetricDate
+, IsNull(Url, '') as Url
+, IsNull(PostScheduledDate, '01/01/1900') as PostScheduledDate
+, IsNull(PostPublishedDate, '01/01/1900') as PostPublishedDate
+, IsNull(MetricDate,'01/01/1900') as MetricDate
 , Customer as ClientToken
 , Store
 , isnull(TotalMetricValue,0) as TotalMetricValue
 , isnull(MetricDelta,0) as MetricDelta
 FROM WithDelta
-ORDER BY MetricDate DESC, PostID, Store, MetricType";
+ORDER BY PostScheduledDate DESC, PostID, Store";
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
@@ -179,9 +245,9 @@ ORDER BY MetricDate DESC, PostID, Store, MetricType";
                                     PostName = reader.IsDBNull(4) ? string.Empty : reader.GetString(4), // PostName
                                     MetaData = reader.IsDBNull(5) ? string.Empty : reader.GetString(5), // MetaData
                                     Url = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
-                                    PostScheduledDate = reader.IsDBNull(5) ? string.Empty : reader.GetString(7), // PostScheduledDate
-                                    PostPublishedDate = reader.IsDBNull(5) ? string.Empty : reader.GetString(8), // PostPublishedDate
-                                    MetricDate = reader.IsDBNull(6) ? string.Empty : reader.GetString(9), // MetricDate
+                                    PostScheduledDate = reader.IsDBNull(5) ? new DateTime(1900, 1, 1) : reader.GetDateTime(7), // PostScheduledDate
+                                    PostPublishedDate = reader.IsDBNull(5) ? new DateTime(1900, 1, 1) : reader.GetDateTime(8), // PostPublishedDate
+                                    MetricDate = reader.IsDBNull(6) ? new DateTime(1900, 1, 1) : reader.GetDateTime(9), // MetricDate
                                     ClientToken = reader.IsDBNull(7) ? string.Empty : reader.GetString(10), // ClientToken
                                     Store = reader.IsDBNull(8) ? string.Empty : reader.GetString(11), // Store
                                     TotalMetricValue = reader.GetInt32(12), // TotalMetricValue
@@ -246,7 +312,7 @@ ORDER BY MetricDate DESC, PostID, Store, MetricType";
                     // Write data rows
                     foreach (var record in records)
                     {
-                        var line = $"\"{EscapeCsvField(record.Platform)}\",\"{EscapeCsvField(record.MetricType)}\",\"{EscapeCsvField(record.MetricTypeId)}\",\"{EscapeCsvField(record.PostID)}\",\"{EscapeCsvField(record.PostName)}\",\"{EscapeCsvField(record.PostScheduledDate)}\",\"{EscapeCsvField(record.MetricDate)}\",\"{EscapeCsvField(record.ClientToken)}\",\"{EscapeCsvField(record.Store)}\",{record.TotalMetricValue},{record.MetricDelta}";
+                        var line = $"\"{EscapeCsvField(record.Platform)}\",\"{EscapeCsvField(record.MetricType)}\",\"{EscapeCsvField(record.MetricTypeId)}\",\"{EscapeCsvField(record.PostID)}\",\"{EscapeCsvField(record.PostName)}\",\"{record.PostScheduledDate}\",\"{record.MetricDate}\",\"{EscapeCsvField(record.ClientToken)}\",\"{EscapeCsvField(record.Store)}\",{record.TotalMetricValue},{record.MetricDelta}";
                         await writer.WriteLineAsync(line);
                     }
                 }

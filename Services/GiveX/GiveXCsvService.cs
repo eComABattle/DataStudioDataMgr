@@ -12,6 +12,34 @@ using DataStudioDataMgr.Models;
 namespace DataStudioDataMgr.Services.GiveX
 {
     /// <summary>
+    /// CSV mapping for AWG aggregated GiveX email stats (same columns as standard GiveX email export).
+    /// </summary>
+    public class AwgEmailStatsMap : ClassMap<AwgEmailStats>
+    {
+        public AwgEmailStatsMap()
+        {
+            Map(m => m.TenantId).Name("TenantId");
+            Map(m => m.EmailSubject).Name("Email Subject");
+            Map(m => m.CampaignId).Name("CampaignId");
+            Map(m => m.DateSent).Name("Date Sent");
+            Map(m => m.CampaignName).Name("CampaignName");
+            Map(m => m.Sent).Name("Sent");
+            Map(m => m.Delivered).Name("Delivered");
+            Map(m => m.Opened).Name("Opened");
+            Map(m => m.TotalClicks).Name("Total Clicks");
+            Map(m => m.UniqueUserClicks).Name("Unique User Clicks");
+            Map(m => m.HardBounces).Name("Hard Bounces");
+            Map(m => m.SoftBounces).Name("Soft Bounces");
+            Map(m => m.SpamComplaint).Name("Spam Complaint");
+            Map(m => m.Unsubscribed).Name("Unsubscribed");
+            Map(m => m.CreatedAt).Ignore();
+            Map(m => m.Source).Ignore();
+            Map(m => m.ClientToken).Ignore();
+            Map(m => m.SourceFileName).Ignore();
+        }
+    }
+
+    /// <summary>
     /// CSV mapping configurations for GiveX data
     /// </summary>
     public class GiveXEmailMap : ClassMap<GiveXEmail>
@@ -217,6 +245,75 @@ namespace DataStudioDataMgr.Services.GiveX
             }
 
             return emails;
+        }
+
+        /// <summary>
+        /// Reads a single AWG aggregated email stats CSV (GiveX column layout).
+        /// </summary>
+        public async Task<List<AwgEmailStats>> ProcessAwgAggregatedEmailStatsFileAsync(string csvFilePath)
+        {
+            var rows = new List<AwgEmailStats>();
+
+            if (string.IsNullOrEmpty(csvFilePath) || !File.Exists(csvFilePath))
+            {
+                Console.WriteLine($"AWG email stats CSV not found: {csvFilePath}");
+                return rows;
+            }
+
+            var fileName = Path.GetFileName(csvFilePath);
+            Console.WriteLine($"Processing AWG aggregated email stats file: {fileName}");
+
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                Delimiter = ",",
+                IgnoreBlankLines = true,
+                BadDataFound = null,
+                MissingFieldFound = null
+            };
+
+            using (var reader = new StreamReader(csvFilePath))
+            using (var csv = new CsvReader(reader, config))
+            {
+                csv.Context.RegisterClassMap<AwgEmailStatsMap>();
+                var dateOptions = new TypeConverterOptions
+                {
+                    Formats = new[] {
+                        "M/d/yyyy",
+                        "yyyy-MM-dd",
+                        "MM/dd/yyyy",
+                        "M/dd/yyyy",
+                        "MM/d/yyyy",
+                        "yyyy/MM/dd",
+                        "M/d/yyyy HH:mm:ss",
+                        "yyyy-MM-dd HH:mm:ss",
+                        "M/d/yyyy h:mm:ss tt",
+                        "MM/dd/yyyy h:mm:ss tt",
+                        "M/dd/yyyy h:mm:ss tt",
+                        "MM/d/yyyy h:mm:ss tt",
+                        "M/d/yyyy h:mm tt",
+                        "MM/dd/yyyy h:mm tt"
+                    }
+                };
+                csv.Context.TypeConverterOptionsCache.AddOptions<DateTime>(dateOptions);
+
+                var records = await Task.Run(() => csv.GetRecords<AwgEmailStats>().ToList());
+                var loadedAt = DateTime.UtcNow;
+                foreach (var record in records)
+                {
+                    record.EmailSubject = record.EmailSubject?.Replace(",", " ");
+                    record.CampaignName = record.CampaignName?.Replace(",", " ");
+                    record.SourceFileName = fileName;
+                    record.CreatedAt = loadedAt;
+                    record.Source = AwgEmailStats.CuratedSource;
+                    record.ClientToken = AwgEmailStats.AwgClientToken;
+                    rows.Add(record);
+                }
+
+                Console.WriteLine($"Parsed {rows.Count} row(s) from {fileName}");
+            }
+
+            return rows;
         }
 
         /// <summary>

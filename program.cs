@@ -115,6 +115,7 @@ class Program
                 bool runCouponApi = bool.Parse(ConfigurationManager.AppSettings["RunCouponApi"] ?? "true");
                 bool runTestEmailMethod = bool.Parse(ConfigurationManager.AppSettings["RunTestEmailMethod"] ?? "false");
                 bool runCampaignData = bool.Parse(ConfigurationManager.AppSettings["RunCampaignData"] ?? "false");
+                bool runUnfiCustomerData = bool.Parse(ConfigurationManager.AppSettings["RunUnfiCustomerData"] ?? "false");
                 bool runMediaStudioData = bool.Parse(ConfigurationManager.AppSettings["RunMediaStudioData"] ?? "false");
                 bool runDigitalStudioData = bool.Parse(ConfigurationManager.AppSettings["RunDigitalStudioData"] ?? "false");
                 bool runEntryMetricsData = bool.Parse(ConfigurationManager.AppSettings["RunEntryMetricsData"] ?? "false");
@@ -123,6 +124,7 @@ class Program
                 bool runGiveXEmailData = bool.Parse(ConfigurationManager.AppSettings["RunGiveXEmailData"] ?? "false");
                 bool runGiveXLoyaltyData = bool.Parse(ConfigurationManager.AppSettings["RunGiveXLoyaltyData"] ?? "false");
                 bool runGiveXCouponData = bool.Parse(ConfigurationManager.AppSettings["RunGiveXCouponData"] ?? "false");
+                bool runAwgEmailStats = bool.Parse(ConfigurationManager.AppSettings["RunAwgEmailStats"] ?? "false");
                 bool runBrDataPOSData = bool.Parse(ConfigurationManager.AppSettings["RunBrDataPOSData"] ?? "false");
                 bool runAppCardData = bool.Parse(ConfigurationManager.AppSettings["RunAppCardData"] ?? "true");
                 bool runBrickCampaignData = bool.Parse(ConfigurationManager.AppSettings["RunBrickCampaignData"] ?? "false");
@@ -131,7 +133,7 @@ class Program
                 bool testMongoDbConnection = bool.Parse(ConfigurationManager.AppSettings["TestMongoDbConnection"] ?? "false");
                 bool testBrickConnection = bool.Parse(ConfigurationManager.AppSettings["TestBrickConnection"] ?? "false");
 
-                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData && !runShopToCookData && !runGiveXEmail && !runGiveXEmailData && !runGiveXLoyaltyData && !runGiveXCouponData && !runBrDataPOSData && !runAppCardData && !runBrickCampaignData && !runBrickDailyStatistics && !runBrickBackupDeleteAndReprocess && !testMongoDbConnection && !testBrickConnection)
+                if (!runEmfluenceApi && !runCouponApi && !runTestEmailMethod && !runCampaignData && !runUnfiCustomerData && !runMediaStudioData && !runDigitalStudioData && !runEntryMetricsData && !runShopToCookData && !runGiveXEmail && !runGiveXEmailData && !runGiveXLoyaltyData && !runGiveXCouponData && !runAwgEmailStats && !runBrDataPOSData && !runAppCardData && !runBrickCampaignData && !runBrickDailyStatistics && !runBrickBackupDeleteAndReprocess && !testMongoDbConnection && !testBrickConnection)
                 {
                     LogMessage("No services configured to run. Check App.config settings.");
                     return;
@@ -209,6 +211,12 @@ class Program
                     await ProcessCampaignDataAsync();
                 }
 
+                if (runUnfiCustomerData)
+                {
+                    LogMessage("=== RUNNING UNFI CUSTOMER DATA SERVICE ===");
+                    await ProcessUnfiCustomerDataAsync();
+                }
+
                 if (runMediaStudioData)
                 {
                     LogMessage("=== RUNNING MEDIASTUDIO DATA SERVICE ===");
@@ -249,6 +257,12 @@ class Program
                 {
                     LogMessage("=== RUNNING GIVEX COUPON DATA SERVICE ===");
                     await ProcessGiveXCouponDataAsync();
+                }
+
+                if (runAwgEmailStats)
+                {
+                    LogMessage("=== RUNNING AWG EMAIL STATS SERVICE (GIVEX CURATED) ===");
+                    await ProcessAwgEmailStatsAsync();
                 }
 
                 if (runBrDataPOSData)
@@ -631,6 +645,72 @@ class Program
         }
     }
 
+    static async Task ProcessUnfiCustomerDataAsync()
+    {
+        UnfiCustomerService customerService = null;
+        try
+        {
+            LogMessage("Initializing UNFI Customer SQL service...");
+            customerService = new UnfiCustomerService();
+
+            bool connectionOk = await customerService.TestConnectionAsync();
+            if (!connectionOk)
+            {
+                LogMessage("ERROR: Could not connect to AdStudioUnfi database for customer data");
+                return;
+            }
+
+            LogMessage("=== FETCHING UNFI CUSTOMER DATA ===");
+            var records = await customerService.GetCustomersAsync();
+            LogMessage($"Total UNFI customer records retrieved: {records.Count}");
+
+            if (records.Count > 0)
+            {
+                string jsonPath = Path.Combine(OutputDirectory, "unfi_customer_data.json");
+                await customerService.SaveUnfiCustomersToJsonAsync(records, jsonPath);
+                LogMessage($"UNFI customer data saved to: {jsonPath}");
+
+                string csvPath = Path.Combine(OutputDirectory, "unfi_customer_data.csv");
+                await customerService.SaveUnfiCustomersToCsvAsync(records, csvPath);
+                LogMessage($"UNFI customer data saved to: {csvPath}");
+            }
+            else
+            {
+                LogMessage("No UNFI customer rows returned from SQL (CustomerID > 0 filter)");
+            }
+
+            if (EnableMongoDbStorage)
+            {
+                LogMessage("=== STORING UNFI CUSTOMER DATA IN MONGODB ===");
+                try
+                {
+                    var mongoService = new MongoDbService();
+                    await mongoService.CreateIndexesAsync();
+                    int storedCount = await mongoService.StoreCustomersAsync(records);
+                    LogMessage($"MongoDB customer collection load completed; inserted {storedCount} document(s) (collection cleared first)");
+                    long total = await mongoService.GetCustomerCountAsync();
+                    LogMessage($"Total UNFI customer documents in MongoDB (ad_campaign.customer): {total}");
+                }
+                catch (Exception ex)
+                {
+                    LogMessage($"Error storing UNFI customer data in MongoDB: {ex.Message}");
+                    LogMessage("Continuing...");
+                }
+            }
+
+            LogMessage("UNFI customer data processing completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing UNFI customer data: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Invalid connection string");
+            LogMessage("  - Database server not accessible");
+            LogMessage("  - Table or column name changes");
+            LogMessage("  - Permission issues");
+        }
+    }
+
     static async Task ProcessMediaStudioDataAsync()
     {
         MediaStudioService mediaStudioService = null;
@@ -995,6 +1075,24 @@ class Program
             LogMessage("  - Network connectivity problems");
             LogMessage("  - MongoDB connection problems");
             LogMessage("  - CSV file format issues");
+        }
+    }
+
+    static async Task ProcessAwgEmailStatsAsync()
+    {
+        try
+        {
+            var awgEmailStatsService = new AwgEmailStatsService();
+            await awgEmailStatsService.ProcessAwgEmailStatsAsync();
+            LogMessage("AWG email stats processing finished.");
+        }
+        catch (Exception ex)
+        {
+            LogMessage($"Error processing AWG email stats: {ex.Message}");
+            LogMessage("This might be due to:");
+            LogMessage("  - Network share access issues (GiveXAwgNetworkPath / GiveXAwgEmailArchivePath)");
+            LogMessage("  - MongoDB connection problems");
+            LogMessage("  - CSV file format or header mismatch");
         }
     }
 

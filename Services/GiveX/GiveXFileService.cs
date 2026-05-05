@@ -258,6 +258,41 @@ namespace DataStudioDataMgr.Services.GiveX
         }
 
         /// <summary>
+        /// Lists CSV files on the AWG network path whose names start with the given prefix (e.g. Aggregated_Email_Stats_).
+        /// </summary>
+        public List<string> EnumerateAwgCsvFilesByPrefix(string fileNamePrefix)
+        {
+            var results = new List<string>();
+            if (string.IsNullOrEmpty(fileNamePrefix))
+                return results;
+
+            try
+            {
+                if (!Directory.Exists(_awgNetworkPath))
+                {
+                    Console.WriteLine($"AWG network path does not exist: {_awgNetworkPath}");
+                    return results;
+                }
+
+                foreach (var path in Directory.EnumerateFiles(_awgNetworkPath, "*.csv", SearchOption.TopDirectoryOnly))
+                {
+                    var name = Path.GetFileName(path);
+                    if (name.StartsWith(fileNamePrefix, StringComparison.OrdinalIgnoreCase))
+                        results.Add(path);
+                }
+
+                Console.WriteLine($"Found {results.Count} AWG CSV file(s) with prefix '{fileNamePrefix}' in {_awgNetworkPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error listing AWG CSV files: {ex.Message}");
+                throw;
+            }
+
+            return results;
+        }
+
+        /// <summary>
         /// Gets a specific CSV file path from network shares
         /// </summary>
         /// <param name="fileName">Name of the file to get</param>

@@ -18,6 +18,7 @@
         <add key="RunCouponApi" value="false" />
         <add key="RunTestEmailMethod" value="false" />
         <add key="RunCampaignData" value="false" />
+        <add key="RunUnfiCustomerData" value="false" />
         <add key="RunMediaStudioData" value="false" />
         <add key="RunDigitalStudioData" value="false" />
         <add key="RunEntryMetricsData" value="false" />
@@ -30,6 +31,7 @@
         <add key="RunGiveXEmailData" value="false" />
         <add key="RunGiveXLoyaltyData" value="false" />
         <add key="RunGiveXCouponData" value="false" />
+        <add key="RunAwgEmailStats" value="false" />
         <add key="RunBrDataPOSData" value="false" />
         
         <!-- ShopToCook SFTP Configuration -->
@@ -220,6 +222,8 @@
                 <add key="MongoDbDatabaseName" value="%MONGODB_DATABASE_NAME%" />
                 <add key="MongoDbTestDatabaseName" value="%MONGODB_TEST_DATABASE_NAME%" />
         <add key="MongoDbEmfluenceCollection" value="emfluence_email" />
+        <add key="MongoDbAwgGiveXCuratedDatabaseName" value="integration_test" />
+        <add key="MongoDbAwgGiveXCuratedCollectionName" value="AWG_giveX_CuratedEmails" />
         <add key="EnableMongoDbStorage" value="true" />
         
         <!-- Logging Configuration -->
@@ -227,6 +231,8 @@
         <add key="LogToFile" value="false" />
         <add key="LogFilePath" value="DataStudioDataMgr.log" />
         <add key="LogLevel" value="Information" />
+        <!-- Set to true when deploying to a new machine to warn if env vars (%VAR%) are not set. See DEPLOYMENT.md -->
+        <add key="ValidateConfigOnStartup" value="false" />
         
         <!-- Email Configuration -->
         <add key="SmtpServer" value="${SMTP_SERVER}" />

@@ -18,6 +18,7 @@ namespace DataStudioDataMgr.Services.MongoDb
         private readonly IMongoCollection<UnfiPostCampaignStoreDocument> _unfiPostCampaignStoreCollection;
         private readonly IMongoCollection<CampaignStoreMetricsDocument> _campaignStoreMetricsCollection;
         private readonly IMongoCollection<EntryMetricsDocument> _entryMetricsCollection;
+        private readonly IMongoCollection<CustomerDocument> _customerCollection;
 
         public MongoDbService()
         {
@@ -40,9 +41,14 @@ namespace DataStudioDataMgr.Services.MongoDb
 
             _emfluenceCollection = _database.GetCollection<EmfluenceEmailDocument>(collectionName);
             _campaignCollection = _database.GetCollection<CampaignDocument>("ad_campaign");
-            _unfiPostCampaignStoreCollection = _database.GetCollection<UnfiPostCampaignStoreDocument>("unfi_post_campaign_store");
-            _campaignStoreMetricsCollection = _database.GetCollection<CampaignStoreMetricsDocument>("campaign_store_metrics");
-            _entryMetricsCollection = _database.GetCollection<EntryMetricsDocument>("entry_metrics");
+
+            var adCampaignDatabase = client.GetDatabase("ad_campaign");
+            _unfiPostCampaignStoreCollection = adCampaignDatabase.GetCollection<UnfiPostCampaignStoreDocument>("post-campaign_store");
+            _campaignStoreMetricsCollection = adCampaignDatabase.GetCollection<CampaignStoreMetricsDocument>("social_studio_metrics");
+            _customerCollection = adCampaignDatabase.GetCollection<CustomerDocument>("customer");
+
+            var eComSystemsTestDatabase = client.GetDatabase("eComSystems_Test");
+            _entryMetricsCollection = eComSystemsTestDatabase.GetCollection<EntryMetricsDocument>("digital_studio");
         }
 
         /// <summary>
@@ -171,6 +177,8 @@ namespace DataStudioDataMgr.Services.MongoDb
         {
             try
             {
+                await _unfiPostCampaignStoreCollection.DeleteManyAsync(FilterDefinition<UnfiPostCampaignStoreDocument>.Empty);
+
                 var documents = new List<UnfiPostCampaignStoreDocument>();
                 
                 foreach (var record in records)
@@ -215,6 +223,8 @@ namespace DataStudioDataMgr.Services.MongoDb
         {
             try
             {
+                await _campaignStoreMetricsCollection.DeleteManyAsync(FilterDefinition<CampaignStoreMetricsDocument>.Empty);
+
                 var documents = new List<CampaignStoreMetricsDocument>();
                 
                 foreach (var record in records)
@@ -263,6 +273,8 @@ namespace DataStudioDataMgr.Services.MongoDb
         {
             try
             {
+                await _entryMetricsCollection.DeleteManyAsync(FilterDefinition<EntryMetricsDocument>.Empty);
+
                 var documents = new List<EntryMetricsDocument>();
                 
                 foreach (var record in records)
@@ -296,6 +308,66 @@ namespace DataStudioDataMgr.Services.MongoDb
             catch (Exception ex)
             {
                 Console.WriteLine($"Error storing Entry Metrics records in MongoDB: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Stores UNFI Customer records in MongoDB (ad_campaign.customer). Replaces existing collection contents.
+        /// </summary>
+        public async Task<int> StoreCustomersAsync(List<UnfiCustomer> records)
+        {
+            try
+            {
+                await _customerCollection.DeleteManyAsync(FilterDefinition<CustomerDocument>.Empty);
+
+                var documents = new List<CustomerDocument>();
+
+                foreach (var record in records)
+                {
+                    var document = new CustomerDocument
+                    {
+                        ClientToken = record.ClientToken,
+                        CustomerId = record.CustomerId,
+                        ActiveThroughDate = record.ActiveThroughDate,
+                        AdminLevel = record.AdminLevel,
+                        CreatedBy = record.CreatedBy,
+                        CreatedDate = record.CreatedDate,
+                        CustomerName = record.CustomerName,
+                        CustomerNumber = record.CustomerNumber,
+                        CustomerServiceRepId = record.CustomerServiceRepId,
+                        Email = record.Email,
+                        Fax = record.Fax,
+                        IsActive = record.IsActive,
+                        IsInternal = record.IsInternal,
+                        LastLoginDate = record.LastLoginDate,
+                        ModifiedBy = record.ModifiedBy,
+                        ModifiedDate = record.ModifiedDate,
+                        Phone = record.Phone,
+                        PreferredLanguageToken = record.PreferredLanguageToken,
+                        SalesRepId = record.SalesRepId,
+                        WebUrl = record.WebUrl,
+                        CustomerGuid = record.CustomerGuid,
+                        CanPreMerchandise = record.CanPreMerchandise,
+                        Notes = record.Notes,
+                        CreatedAt = DateTime.UtcNow,
+                        Source = "SqlServer"
+                    };
+
+                    documents.Add(document);
+                }
+
+                if (documents.Count > 0)
+                {
+                    await _customerCollection.InsertManyAsync(documents);
+                    Console.WriteLine($"Successfully stored {documents.Count} UNFI customer records in MongoDB");
+                }
+
+                return documents.Count;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error storing UNFI customer records in MongoDB: {ex.Message}");
                 throw;
             }
         }
@@ -381,6 +453,22 @@ namespace DataStudioDataMgr.Services.MongoDb
             catch (Exception ex)
             {
                 Console.WriteLine($"Error getting Entry Metrics count: {ex.Message}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the count of documents in the UNFI customer collection
+        /// </summary>
+        public async Task<long> GetCustomerCountAsync()
+        {
+            try
+            {
+                return await _customerCollection.CountDocumentsAsync(FilterDefinition<CustomerDocument>.Empty);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting UNFI customer count: {ex.Message}");
                 return 0;
             }
         }
@@ -521,6 +609,15 @@ namespace DataStudioDataMgr.Services.MongoDb
                     .Ascending(x => x.EntryId);
                     //.Ascending(x => x.Timestamp);
                 await _entryMetricsCollection.Indexes.CreateOneAsync(new CreateIndexModel<EntryMetricsDocument>(accountEntryTimestampIndex));
+
+                var customerIdIdx = Builders<CustomerDocument>.IndexKeys.Ascending(x => x.CustomerId);
+                await _customerCollection.Indexes.CreateOneAsync(new CreateIndexModel<CustomerDocument>(customerIdIdx));
+
+                var customerGuidIdx = Builders<CustomerDocument>.IndexKeys.Ascending(x => x.CustomerGuid);
+                await _customerCollection.Indexes.CreateOneAsync(new CreateIndexModel<CustomerDocument>(customerGuidIdx));
+
+                var customerClientTokenIdx = Builders<CustomerDocument>.IndexKeys.Ascending(x => x.ClientToken);
+                await _customerCollection.Indexes.CreateOneAsync(new CreateIndexModel<CustomerDocument>(customerClientTokenIdx));
 
                 Console.WriteLine("MongoDB indexes created successfully");
             }
@@ -771,10 +868,10 @@ namespace DataStudioDataMgr.Services.MongoDb
         public string PostName { get; set; }
 
         [BsonElement("postScheduledDate")]
-        public string PostScheduledDate { get; set; }
+        public DateTime PostScheduledDate { get; set; }
 
         [BsonElement("metricDate")]
-        public string MetricDate { get; set; }
+        public DateTime MetricDate { get; set; }
 
         [BsonElement("clientToken")]
         public string ClientToken { get; set; }
@@ -834,6 +931,91 @@ namespace DataStudioDataMgr.Services.MongoDb
         public string MetaData { get; set; }
 
         // Metadata
+        [BsonElement("createdAt")]
+        public DateTime CreatedAt { get; set; }
+
+        [BsonElement("source")]
+        public string Source { get; set; }
+    }
+
+    /// <summary>
+    /// Document model for UNFI Customer data in MongoDB (ad_campaign.customer)
+    /// </summary>
+    public class CustomerDocument
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
+
+        [BsonElement("clientToken")]
+        public string ClientToken { get; set; }
+
+        [BsonElement("customerId")]
+        public int CustomerId { get; set; }
+
+        [BsonElement("activeThroughDate")]
+        public DateTime? ActiveThroughDate { get; set; }
+
+        [BsonElement("adminLevel")]
+        public int AdminLevel { get; set; }
+
+        [BsonElement("createdBy")]
+        public string CreatedBy { get; set; }
+
+        [BsonElement("createdDate")]
+        public string CreatedDate { get; set; }
+
+        [BsonElement("customerName")]
+        public string CustomerName { get; set; }
+
+        [BsonElement("customerNumber")]
+        public string CustomerNumber { get; set; }
+
+        [BsonElement("customerServiceRepId")]
+        public int? CustomerServiceRepId { get; set; }
+
+        [BsonElement("email")]
+        public string Email { get; set; }
+
+        [BsonElement("fax")]
+        public string Fax { get; set; }
+
+        [BsonElement("isActive")]
+        public bool IsActive { get; set; }
+
+        [BsonElement("isInternal")]
+        public bool IsInternal { get; set; }
+
+        [BsonElement("lastLoginDate")]
+        public string LastLoginDate { get; set; }
+
+        [BsonElement("modifiedBy")]
+        public int ModifiedBy { get; set; }
+
+        [BsonElement("modifiedDate")]
+        public string ModifiedDate { get; set; }
+
+        [BsonElement("phone")]
+        public string Phone { get; set; }
+
+        [BsonElement("preferredLanguageToken")]
+        public string PreferredLanguageToken { get; set; }
+
+        [BsonElement("salesRepId")]
+        public int? SalesRepId { get; set; }
+
+        [BsonElement("webUrl")]
+        public string WebUrl { get; set; }
+
+        [BsonElement("customerGuid")]
+        public string CustomerGuid { get; set; }
+
+        [BsonElement("canPreMerchandise")]
+        public bool CanPreMerchandise { get; set; }
+
+        [BsonElement("notes")]
+        public string Notes { get; set; }
+
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; }
 

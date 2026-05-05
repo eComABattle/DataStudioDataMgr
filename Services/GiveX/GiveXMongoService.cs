@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Driver;
@@ -32,6 +33,7 @@ namespace DataStudioDataMgr.Services.GiveX
         public int spam_complaint { get; set; }
         public int unsubscribed { get; set; }
         public string file_name { get; set; }
+        public string source { get; set; }
         public DateTime createdAt { get; set; } = DateTime.UtcNow;
     }
 
@@ -120,6 +122,14 @@ namespace DataStudioDataMgr.Services.GiveX
         public const string LoyaltyDatabaseName = "loyalty_analytics";
         public const string CouponDatabaseName = "digital_coupon_analytics";
 
+        /// <summary>AWG GiveX curated aggregated email stats (App.config can override).</summary>
+        public const string AwgGiveXCuratedEmailsDatabaseName = "integration_test";
+        public const string AwgGiveXCuratedEmailsCollectionName = "AWG_giveX_CuratedEmails";
+
+        private readonly string _awgGiveXCuratedDbName;
+        private readonly string _awgGiveXCuratedCollectionName;
+        private readonly IMongoCollection<GiveXEmailDocument> _awgGiveXCuratedEmailsCollection;
+
         public GiveXMongoService()
         {
             var connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MongoDbConnectionString"]?.ConnectionString;
@@ -150,6 +160,30 @@ namespace DataStudioDataMgr.Services.GiveX
             _emailCollection = emailDatabase.GetCollection<GiveXEmailDocument>("email");
             _loyaltyCollection = loyaltyDatabase.GetCollection<GiveXLoyaltyDocument>("events");
             _couponCollection = couponDatabase.GetCollection<GiveXCouponDocument>("events");
+
+            _awgGiveXCuratedDbName = ReadAppSettingOrDefault(
+                "MongoDbAwgGiveXCuratedDatabaseName",
+                AwgGiveXCuratedEmailsDatabaseName);
+            _awgGiveXCuratedCollectionName = ReadAppSettingOrDefault(
+                "MongoDbAwgGiveXCuratedCollectionName",
+                AwgGiveXCuratedEmailsCollectionName);
+            var awgCuratedDb = _client.GetDatabase(_awgGiveXCuratedDbName);
+            _awgGiveXCuratedEmailsCollection = awgCuratedDb.GetCollection<GiveXEmailDocument>(_awgGiveXCuratedCollectionName);
+        }
+
+        /// <summary>Resolved MongoDB database for AWG GiveX curated email stats (after App.config).</summary>
+        public string ResolvedAwgGiveXCuratedDatabaseName => _awgGiveXCuratedDbName;
+
+        /// <summary>Resolved MongoDB collection for AWG GiveX curated email stats (after App.config).</summary>
+        public string ResolvedAwgGiveXCuratedCollectionName => _awgGiveXCuratedCollectionName;
+
+        private static string ReadAppSettingOrDefault(string key, string defaultValue)
+        {
+            var raw = ConfigurationManager.AppSettings[key];
+            if (string.IsNullOrWhiteSpace(raw))
+                return defaultValue;
+            var expanded = Environment.ExpandEnvironmentVariables(raw).Trim();
+            return string.IsNullOrEmpty(expanded) ? defaultValue : expanded;
         }
 
         //public GiveXMongoService(string connectionString, string databaseName = null)
@@ -229,6 +263,127 @@ namespace DataStudioDataMgr.Services.GiveX
             {
                 Console.WriteLine($"Error storing GiveX email data: {ex.Message}");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Stores AWG aggregated GiveX email stats (curated feed) in integration_test.AWG_giveX_CuratedEmails (configurable).
+        /// </summary>
+        public async Task<int> StoreAwgEmailStatsAsync(List<AwgEmailStats> rows)
+        {
+            try
+            {
+                if (rows == null || rows.Count == 0)
+                {
+                    Console.WriteLine("No AWG email stats rows to store");
+                    return 0;
+                }
+
+                Console.WriteLine($"Storing {rows.Count} AWG email stats record(s) in MongoDB '{_awgGiveXCuratedDbName}'.'{_awgGiveXCuratedCollectionName}'...");
+
+                var documents = new List<GiveXEmailDocument>();
+                foreach (var r in rows)
+                {
+                    documents.Add(new GiveXEmailDocument
+                    {                        
+                        tenant_id = r.TenantId?.ToString(),
+                        email_subject = r.EmailSubject,
+                        campaign_id = r.CampaignId,
+                        date_sent = r.DateSent,
+                        campaign_name = r.CampaignName,
+                        sent = r.Sent,
+                        delivered = r.Delivered,
+                        opened = r.Opened,
+                        total_clicks = r.TotalClicks,
+                        unique_user_clicks = r.UniqueUserClicks,
+                        hard_bounces = r.HardBounces,
+                        soft_bounces = r.SoftBounces,
+                        spam_complaint = r.SpamComplaint,
+                        unsubscribed = r.Unsubscribed,
+                        createdAt = r.CreatedAt == default ? DateTime.UtcNow : r.CreatedAt,
+                        source = r.Source ?? AwgEmailStats.CuratedSource,
+                        client_token = r.ClientToken ?? AwgEmailStats.AwgClientToken,
+                        file_name = r.SourceFileName
+                        
+                        
+                    });
+                }
+
+                await _awgGiveXCuratedEmailsCollection.InsertManyAsync(documents);
+                Console.WriteLine($"Successfully stored {rows.Count} AWG email stats record(s)");
+                return rows.Count;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error storing AWG email stats: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Ensures the AWG GiveX curated emails collection exists (default: integration_test / AWG_giveX_CuratedEmails).
+        /// </summary>
+        public async Task EnsureAwgGiveXCuratedEmailsCollectionExistsAsync()
+        {
+            try
+            {
+                Console.WriteLine($"Ensuring MongoDB collection '{_awgGiveXCuratedCollectionName}' exists in database '{_awgGiveXCuratedDbName}'...");
+
+                var database = _client.GetDatabase(_awgGiveXCuratedDbName);
+                var collections = await database.ListCollectionNamesAsync();
+                var collectionNames = await collections.ToListAsync();
+
+                if (!collectionNames.Contains(_awgGiveXCuratedCollectionName))
+                {
+                    await database.CreateCollectionAsync(_awgGiveXCuratedCollectionName);
+                    Console.WriteLine($"Created collection '{_awgGiveXCuratedCollectionName}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Collection '{_awgGiveXCuratedCollectionName}' already exists.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error ensuring AWG GiveX curated emails collection exists: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Creates indexes on the AWG GiveX curated emails collection.
+        /// </summary>
+        public async Task CreateAwgGiveXCuratedEmailIndexesAsync()
+        {
+            try
+            {
+                Console.WriteLine($"Creating MongoDB indexes for '{_awgGiveXCuratedDbName}'.'{_awgGiveXCuratedCollectionName}'...");
+
+                var dateSentIndex = Builders<GiveXEmailDocument>.IndexKeys.Ascending(x => x.date_sent);
+                await _awgGiveXCuratedEmailsCollection.Indexes.CreateOneAsync(new CreateIndexModel<GiveXEmailDocument>(dateSentIndex));
+
+                var campaignIdIndex = Builders<GiveXEmailDocument>.IndexKeys.Ascending(x => x.campaign_id);
+                await _awgGiveXCuratedEmailsCollection.Indexes.CreateOneAsync(new CreateIndexModel<GiveXEmailDocument>(campaignIdIndex));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating AWG GiveX curated email indexes: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Document count in the AWG GiveX curated emails collection.
+        /// </summary>
+        public async Task<long> GetAwgGiveXCuratedEmailsCountAsync()
+        {
+            try
+            {
+                return await _awgGiveXCuratedEmailsCollection.CountDocumentsAsync(_ => true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error counting AWG GiveX curated emails: {ex.Message}");
+                return 0;
             }
         }
 
